@@ -1,15 +1,16 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
+import BrowseCourses from "@/components/browse_courses" // Import the new component
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
-      {/* Main white card container */}
+    <div className="flex min-h-screen flex-col items-center bg-gray-100 p-4">
+      {/* Main white card container for Hero Section */}
       <div className="relative w-full max-w-[1400px] bg-white rounded-3xl shadow-lg overflow-hidden">
         {/* Header */}
         <header className="flex items-center justify-between px-8 py-4 md:px-16 lg:px-24">
-          <div className="text-2xl font-bold text-uncommonBlue">uncommon</div>
+          <div className="text-2xl font-bold text-uncommonBlue-DEFAULT">uncommon</div>
           <nav className="hidden space-x-8 md:flex">
             <Link href="#" className="text-lg font-medium hover:text-uncommonBlue-DEFAULT">
               Home
@@ -22,10 +23,10 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="flex space-x-4">
-            <Button className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md">
+            <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md">
               Login
             </Button>
-            <Button className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md">
+            <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md">
               Sign Up
             </Button>
           </div>
@@ -42,10 +43,10 @@ export default function LandingPage() {
               Enhance your employability with our upskilling courses.
             </p>
             <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md">
+              <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
                 Know More &gt;&gt;
               </Button>
-              <Button className="bg-blue-800 hover:bg-blue-900 text-white px-6 py-2 rounded-md">
+              <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
                 Get Started &gt;&gt;
               </Button>
             </div>
@@ -72,7 +73,7 @@ export default function LandingPage() {
           {/* Right Image Placeholder (with frame) */}
           <div className="relative h-full min-h-[400px] lg:min-h-[600px] rounded-r-3xl rounded-l-none overflow-hidden">
             <Image
-              src="/hero_image.avif"
+              src="/placeholder.svg?height=600&width=480"
               alt="Placeholder for student image"
               width={480}
               height={600}
@@ -81,6 +82,9 @@ export default function LandingPage() {
           </div>
         </main>
       </div>
+
+      {/* Browse Courses Section */}
+      <BrowseCourses />
     </div>
   )
 }
