@@ -5,48 +5,47 @@ import BrowseCourses from "@/components/browse_courses" // Import the new compon
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gray-100 p-4">
+    <div>
       {/* Main white card container for Hero Section */}
-      <div className="relative w-full max-w-[1400px] bg-white rounded-3xl shadow-lg overflow-hidden">
         {/* Header */}
-        <header className="flex items-center justify-between px-8 py-4 md:px-16 lg:px-24">
-          <div className="text-2xl font-bold text-uncommonBlue-DEFAULT">uncommon</div>
+        <header className="flex items-center justify-between w-full">
+          <div className="text-2xl font-bold text-uncommonBlue">uncommon</div>
           <nav className="hidden space-x-8 md:flex">
-            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue-DEFAULT">
+            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue">
               Home
             </Link>
-            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue-DEFAULT">
+            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue">
               Courses
             </Link>
-            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue-DEFAULT">
+            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue">
               About
             </Link>
           </nav>
           <div className="flex space-x-4">
-            <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md">
+            <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md">
               Login
             </Button>
-            <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md">
+            <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md">
               Sign Up
             </Button>
           </div>
         </header>
 
         {/* Hero Section - Grid for content and image */}
-        <main className="grid grid-cols-1 lg:grid-cols-2 items-center">
+        <main className="grid grid-cols-1 md:grid-cols-3 items-center gap-6">
           {/* Left Content */}
-          <div className="px-8 py-12 md:px-16 md:py-20 lg:px-24 lg:py-24 flex flex-col space-y-8">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight">
-              continue your <br /> uncommon journey
+          <div className="col-span-2 space-y-6">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-medium leading-tight">
+              continue your uncommon journey
             </h1>
-            <p className="text-xl md:text-2xl text-gray-700 max-w-lg">
+            <p className="text-xl md:text-2xl text-gray-700">
               Enhance your employability with our upskilling courses.
             </p>
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
+            <div className="flex justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
                 Know More &gt;&gt;
               </Button>
-              <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
+              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
                 Get Started &gt;&gt;
               </Button>
             </div>
@@ -71,17 +70,16 @@ export default function LandingPage() {
           </div>
 
           {/* Right Image Placeholder (with frame) */}
-          <div className="relative h-full min-h-[400px] lg:min-h-[600px] rounded-r-3xl rounded-l-none overflow-hidden">
+          <div className="py-12">
             <Image
-              src="/placeholder.svg?height=600&width=480"
+              src="/hero_image.avif"
               alt="Placeholder for student image"
               width={480}
               height={600}
-              className="object-cover w-full h-full"
+              className="object-cover object-top h-full w-full rounded-lg "
             />
           </div>
         </main>
-      </div>
 
       {/* Browse Courses Section */}
       <BrowseCourses />
