@@ -5,7 +5,7 @@ export const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className
 );
 
 export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className = "", ...props }) => (
-  <div className={`border-b p-4 ${className}`} {...props} />
+  <div className={`p-4 ${className}`} {...props} />
 );
 
 export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className = "", ...props }) => (
@@ -13,7 +13,7 @@ export const CardContent: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ cl
 );
 
 export const CardFooter: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className = "", ...props }) => (
-  <div className={`border-t p-4 ${className}`} {...props} />
+  <div className={`p-4 ${className}`} {...props} />
 );
 
 export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({ className = "", ...props }) => (

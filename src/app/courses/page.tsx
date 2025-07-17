@@ -1,6 +1,8 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useParams } from 'next/navigation';
 
 export default function CourseCatalogPage() {
   const filterCategories = [
@@ -20,6 +22,7 @@ export default function CourseCatalogPage() {
     {
       title: "Building A Growth Mindset",
       lessons: "24 Lessons",
+      time: "2h 30m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
     },
@@ -27,37 +30,42 @@ export default function CourseCatalogPage() {
     {
       title: "Building A Growth Mindset",
       lessons: "24 Lessons",
+      time: "2h 30m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
     },
     {
       title: "Building A Growth Mindset",
       lessons: "24 Lessons",
+      time: "2h 30m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
     },
     {
       title: "Building A Growth Mindset",
       lessons: "24 Lessons",
+      time: "2h 30m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
     },
     {
       title: "Building A Growth Mindset",
       lessons: "24 Lessons",
+      time: "2h 30m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
     },
     {
       title: "Building A Growth Mindset",
       lessons: "24 Lessons",
+      time: "2h 30m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,6 +99,15 @@ export default function CourseCatalogPage() {
         {/* Courses Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">Courses</h1>
+
+          {/* Search Bar */}
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Search courses..."
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
           {/* Filter Section */}
           <div className="mb-6">
@@ -145,13 +162,15 @@ export default function CourseCatalogPage() {
                 </CardHeader>
                 <CardContent className="p-6">
                   <CardTitle className="text-lg font-semibold text-gray-900 mb-2">{course.title}</CardTitle>
-                  <CardDescription className="text-sm text-gray-500 mb-3">{course.lessons}</CardDescription>
+                  <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                    <span>{course.lessons}</span>
+                    <span>{course.time}</span>
+                  </div>
                   <p className="text-sm text-gray-600 leading-relaxed">{course.description}</p>
                 </CardContent>
                 <CardFooter className="p-6 pt-0">
                   <Button
-                    variant="outline"
-                    className="w-full rounded-md border-gray-300 text-gray-700 hover:bg-gray-50 bg-transparent"
+                    className="w-full rounded-md border-gray-300 text-white bg-[#0747A1] hover:bg-[#053674]"
                   >
                     Enroll
                   </Button>
@@ -161,7 +180,7 @@ export default function CourseCatalogPage() {
           </div>
 
           {/* Show More Button */}
-          <div className="text-center">
+          <div className="text-left">
             <Button variant="outline" className="rounded-md bg-transparent">
               Show 6 more
             </Button>

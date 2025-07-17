@@ -13,7 +13,7 @@ export const Button: React.FC<ButtonProps> = ({ variant = "default", className =
           ? "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
           : variant === "secondary"
           ? "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          : "bg-blue-600 text-white hover:bg-blue-700"
+          : "bg-[#0747A1] text-white hover:bg-[#053674]"
       } ${className}`}
       {...props}
     />
