@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useParams } from 'next/navigation';
+import Link from "next/link";
 
 export default function CourseCatalogPage() {
   const filterCategories = [
@@ -20,47 +20,64 @@ export default function CourseCatalogPage() {
 
   const courses = [
     {
+      id: 1,
       title: "Building A Growth Mindset",
       lessons: "24 Lessons",
-      time: "2h 30m",
+      duration: "2h 30m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
-    },
-    // ... repeat or add more courses as needed ...
-    {
-      title: "Building A Growth Mindset",
-      lessons: "24 Lessons",
-      time: "2h 30m",
-      description:
-        "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
+      image: "/placeholder.svg?height=200&width=300",
+      category: "Personal Growth",
     },
     {
-      title: "Building A Growth Mindset",
-      lessons: "24 Lessons",
-      time: "2h 30m",
+      id: 2,
+      title: "Speak With Impact",
+      lessons: "18 Lessons",
+      duration: "1h 45m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
+      image: "/placeholder.svg?height=200&width=300",
+      category: "Communication Skills",
     },
     {
-      title: "Building A Growth Mindset",
-      lessons: "24 Lessons",
-      time: "2h 30m",
+      id: 3,
+      title: "Networking",
+      lessons: "15 Lessons",
+      duration: "1h 20m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
+      image: "/placeholder.svg?height=200&width=300",
+      category: "Career Skills",
     },
     {
-      title: "Building A Growth Mindset",
+      id: 4,
+      title: "Nail the Interview",
       lessons: "24 Lessons",
-      time: "2h 30m",
+      duration: "2h 45m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
+      image: "/placeholder.svg?height=200&width=300",
+      category: "Career Skills",
     },
     {
-      title: "Building A Growth Mindset",
-      lessons: "24 Lessons",
-      time: "2h 30m",
+      id: 5,
+      title: "Budget Like a Boss",
+      lessons: "19 Lessons",
+      duration: "1h 55m",
       description:
         "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
+      image: "/placeholder.svg?height=200&width=300",
+      category: "Money Matters",
+    },
+    {
+      id: 6,
+      title: "Google Workspace Basics",
+      lessons: "14 Lessons",
+      duration: "1h 15m",
+      description:
+        "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
+      image: "/placeholder.svg?height=200&width=300",
+      category: "Digital Tools",
     },
   ];
 
@@ -150,30 +167,30 @@ export default function CourseCatalogPage() {
 
           {/* Course Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {courses.map((course, index) => (
+            {courses.map((course) => (
               <Card
-                key={index}
+                key={course.id}
                 className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
               >
+                <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                  <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                </div>
                 <CardHeader className="p-0">
-                  <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                    <div className="w-16 h-16 bg-gray-200 rounded"></div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6">
                   <CardTitle className="text-lg font-semibold text-gray-900 mb-2">{course.title}</CardTitle>
                   <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
                     <span>{course.lessons}</span>
-                    <span>{course.time}</span>
+                    <span>{course.duration}</span>
                   </div>
-                  <p className="text-sm text-gray-600 leading-relaxed">{course.description}</p>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{course.description}</p>
                 </CardContent>
                 <CardFooter className="p-6 pt-0">
-                  <Button
-                    className="w-full rounded-md border-gray-300 text-white bg-[#0747A1] hover:bg-[#053674]"
-                  >
-                    Enroll
-                  </Button>
+                  <Link href={`/courses/${course.id}/enroll`} className="w-full">
+                    <Button className="w-full rounded-md border-gray-300 text-white bg-[#0747A1] hover:bg-[#053674]">
+                      Enroll
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
             ))}
