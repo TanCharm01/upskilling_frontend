@@ -1,7 +1,7 @@
 import React from "react";
 
 export const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className = "", ...props }) => (
-  <div className={`shadow-sm rounded-lg bg-white ${className}`} {...props} />
+  <div className={`rounded-lg bg-white ${className}`} {...props} />
 );
 
 export const CardHeader: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className = "", ...props }) => (
