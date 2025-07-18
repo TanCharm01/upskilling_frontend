@@ -11,7 +11,7 @@ import Link from "next/link"
 
 // Mock user data
 const userData = {
-  name: "Tanatswa",
+  name: "Daisy",
   tagline: "Think different",
   avatar: "/placeholder.svg?height=60&width=60",
   stats: {
@@ -210,7 +210,7 @@ export default function StudentDashboard() {
         {/* Content Area */}
         <div className="flex-1 p-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-12">
             <div className="flex items-center space-x-6">
               <h1 className="text-2xl font-semibold text-gray-900">
                 Hello, <span className="font-bold">{userData.name}</span>, welcome back!
