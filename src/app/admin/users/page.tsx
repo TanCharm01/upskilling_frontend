@@ -1,9 +1,21 @@
+"use client" // This page needs to be a client component to use useState for the dialog
+
+import { useState } from "react"
 import AdminSidebar from "@/components/admin_sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Search, ChevronDown, Plus, MoreHorizontal, ArrowLeft, ArrowRight } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog" // Import Dialog components
+import { Search, ChevronDown, Plus, MoreHorizontal, ArrowLeft, ArrowRight, X } from "lucide-react" // Import X for close button
 import { cn } from "@/lib/utils"
 
 const usersData = [
@@ -109,6 +121,8 @@ const usersData = [
 ]
 
 export default function UserManagementPage() {
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false) // State to control modal visibility
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Admin Sidebar */}
@@ -172,9 +186,59 @@ export default function UserManagementPage() {
                     <DropdownMenuItem>All time</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-4 py-2 rounded-md flex items-center">
-                  <Plus className="h-5 w-5 mr-2" /> Add user
-                </Button>
+
+                {/* Add User Dialog Trigger */}
+                <Dialog open={isAddUserModalOpen} onOpenChange={setIsAddUserModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-uncommonBlue-DEFAULT hover:bg-uncommonBlue-dark text-white px-4 py-2 rounded-md flex items-center">
+                      <Plus className="h-5 w-5 mr-2" /> Add user
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px] p-6">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-bold">Add new user</DialogTitle>
+                      <DialogDescription className="text-gray-600">
+                        Please provide information to create a new user.
+                      </DialogDescription>
+                      <DialogClose asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+                        >
+                          <X className="h-4 w-4" />
+                          <span className="sr-only">Close</span>
+                        </Button>
+                      </DialogClose>
+                    </DialogHeader>
+                    <form className="grid gap-4 py-4">
+                      <div className="grid gap-2">
+                        <label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+                          Full name
+                        </label>
+                        <Input id="fullName" placeholder="John Doe" />
+                      </div>
+                      <div className="grid gap-2">
+                        <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                          Email
+                        </label>
+                        <Input id="email" type="email" placeholder="name@company.com" />
+                      </div>
+                      <div className="grid gap-2">
+                        <label htmlFor="role" className="text-sm font-medium text-gray-700">
+                          Role
+                        </label>
+                        <Input id="role" placeholder="Admin" /> {/* This could be a dropdown in a real app */}
+                      </div>
+                      <Button
+                        type="submit"
+                        className="w-full bg-loginPurple-DEFAULT hover:bg-loginPurple-dark text-white py-2 rounded-md mt-4"
+                      >
+                        Add user
+                      </Button>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
 
