@@ -14,8 +14,8 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogClose,
-} from "@/components/ui/dialog" // Import Dialog components
-import { Search, ChevronDown, Plus, MoreHorizontal, ArrowLeft, ArrowRight, X } from "lucide-react" // Import X for close button
+} from "@/components/ui/dialog"
+import { Search, ChevronDown, Plus, MoreHorizontal, ArrowLeft, ArrowRight, X, Trash2 } from "lucide-react" // Import Trash2 for delete icon
 import { cn } from "@/lib/utils"
 
 const usersData = [
@@ -121,7 +121,22 @@ const usersData = [
 ]
 
 export default function UserManagementPage() {
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false) // State to control modal visibility
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false)
+  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false) // New state for delete modal
+  const [userToDelete, setUserToDelete] = useState<string | null>(null) // State to store user ID to delete
+
+  const handleDeleteClick = (userId: string) => {
+    setUserToDelete(userId)
+    setIsDeleteUserModalOpen(true)
+  }
+
+  const confirmDelete = () => {
+    // In a real application, you would send a request to delete the user with userToDelete ID
+    console.log(`Deleting user with ID: ${userToDelete}`)
+    setIsDeleteUserModalOpen(false)
+    setUserToDelete(null)
+    // You might want to refresh the user list here
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -283,7 +298,57 @@ export default function UserManagementPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem>View user</DropdownMenuItem>
                           <DropdownMenuItem>Edit user</DropdownMenuItem>
-                          <DropdownMenuItem>Delete user</DropdownMenuItem>
+                          <DropdownMenuItem>Deactivate</DropdownMenuItem>
+                          {/* Delete User Dialog Trigger */}
+                          <Dialog
+                            open={isDeleteUserModalOpen && userToDelete === user.id}
+                            onOpenChange={setIsDeleteUserModalOpen}
+                          >
+                            <DialogTrigger asChild>
+                              <DropdownMenuItem
+                                onSelect={(e) => {
+                                  e.preventDefault()
+                                  handleDeleteClick(user.id)
+                                }}
+                              >
+                                Delete
+                              </DropdownMenuItem>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px] p-6 text-center">
+                              <DialogHeader className="flex flex-col items-center">
+                                <Trash2 className="h-12 w-12 text-red-500 mb-4" />
+                                <DialogTitle className="text-2xl font-bold">Delete user?</DialogTitle>
+                                <DialogDescription className="text-gray-600">
+                                  Are you sure you want to delete this user? The action is irreversible.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="flex flex-col gap-4 mt-4">
+                                <Button
+                                  onClick={confirmDelete}
+                                  className="w-full bg-destructive-DEFAULT hover:bg-destructive-foreground text-destructive-foreground hover:text-white py-2 rounded-md"
+                                >
+                                  Delete user
+                                </Button>
+                                <Button
+                                  onClick={() => setIsDeleteUserModalOpen(false)}
+                                  variant="outline"
+                                  className="w-full bg-transparent py-2 rounded-md"
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                              <DialogClose asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+                                >
+                                  <X className="h-4 w-4" />
+                                  <span className="sr-only">Close</span>
+                                </Button>
+                              </DialogClose>
+                            </DialogContent>
+                          </Dialog>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
