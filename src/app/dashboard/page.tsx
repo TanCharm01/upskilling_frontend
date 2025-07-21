@@ -182,7 +182,7 @@ export default function StudentDashboard() {
               </div>
             </div>
             <div className="text-gray-600">
-              <span className="font-medium">Monday</span>, {currentDate.split(", ")[1]}
+              {currentDate}
             </div>
           </div>
           {/* Ongoing Courses Section */}
@@ -202,27 +202,41 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {ongoingCourses.map((course: DashboardCourse) => (
-                  <Card key={course.id} className="overflow-hidden shadow-md">
+                {ongoingCourses.map((item: any) => (
+                  <Card key={item.id} className="overflow-hidden shadow-md h-full flex flex-col">
                     <div className="aspect-video bg-gray-200">
                       <img
-                        src={course.thumbnailUrl && course.thumbnailUrl !== '' ? course.thumbnailUrl : DEFAULT_COURSE_IMAGE}
+                        src={item.course.thumbnailUrl || DEFAULT_COURSE_IMAGE}
                         onError={handleImgError}
-                        alt={course.title}
+                        alt={item.course.title}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-3">{course.title}</h3>
+                    <CardContent className="p-4 flex flex-col h-full">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">{item.course.title}</h3>
+                        <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{item.course.level}</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.course.description}</p>
+                      <div className="flex items-center text-xs text-gray-500 mb-3">
+                        <span>
+                          {Math.round((item.course.duration ?? 0) / 60) > 0
+                            ? `${Math.floor((item.course.duration ?? 0) / 60)}h `
+                            : ''}
+                          {(item.course.duration ?? 0) % 60}m
+                        </span>
+                      </div>
                       <div className="mb-3">
                         <div className="flex justify-between text-sm text-gray-600 mb-1">
-                          <span>{course.progress ? `${course.progress}%` : "In Progress"}</span>
+                          <span>{item.progress ? `${item.progress}%` : "In Progress"}</span>
                         </div>
-                        <Progress value={course.progress || 0} className="h-2" />
+                        <Progress value={item.progress || 0} className="h-2" />
                       </div>
-                      <Link href={`/courses/${course.id}/learn/1`}>
-                        <Button className="w-full bg-[#0747A1] hover:bg-[#05316e]">Resume</Button>
-                      </Link>
+                      <div className="mt-auto">
+                        <Link href={`/courses/${item.course.id}/learn/1`}>
+                          <Button className="w-full bg-[#0747A1] hover:bg-[#05316e]">Resume</Button>
+                        </Link>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
@@ -259,7 +273,19 @@ export default function StudentDashboard() {
                       </div>
                     </div>
                     <CardContent className="p-4">
-                      <h3 className="font-semibold text-gray-900 mb-2">{course.title}</h3>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">{course.title}</h3>
+                        <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.level}</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{course.description}</p>
+                      <div className="flex items-center text-xs text-gray-500 mb-3">
+                        <span>
+                          {Math.round((course.duration ?? 0) / 60) > 0
+                            ? `${Math.floor((course.duration ?? 0) / 60)}h `
+                            : ''}
+                          {(course.duration ?? 0) % 60}m
+                        </span>
+                      </div>
                       <div className="mb-3">
                         <div className="flex justify-between text-sm text-gray-600 mb-1">
                           <span>Completed</span>
@@ -302,12 +328,18 @@ export default function StudentDashboard() {
                     />
                   </div>
                   <CardContent className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3">{course.title}</h3>
-                    <div className="mb-3">
-                      <div className="flex justify-between text-sm text-gray-600 mb-1">
-                        <span>{course.level}</span>
-                        <span>{course.duration} min</span>
-                      </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-gray-900">{course.title}</h3>
+                      <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.level}</span>
+                    </div>
+                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">{course.description}</p>
+                    <div className="flex items-center text-xs text-gray-500 mb-3">
+                      <span>
+                        {Math.round((course.duration ?? 0) / 60) > 0
+                          ? `${Math.floor((course.duration ?? 0) / 60)}h `
+                          : ''}
+                        {(course.duration ?? 0) % 60}m
+                      </span>
                     </div>
                     <Link href={`/courses/${course.id}/enroll`}>
                       <Button className="w-full bg-[#0747A1] hover:bg-[#05316e]">Enroll</Button>

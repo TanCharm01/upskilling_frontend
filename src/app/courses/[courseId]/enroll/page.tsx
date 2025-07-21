@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,210 +8,12 @@ import { Progress } from "@/components/ui/progress"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Clock, BookOpen, Award, BadgeIcon as Certificate, Trophy, CheckCircle, Play, Lock, ChevronDown, ChevronRight, PlayCircle } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 
 console.log("Collapsible is:", Collapsible)
 
 
-// Mock course data - in a real app, this would come from an API
-const getCourseData = (courseId: string) => {
-  const courses = {
-    "1": {
-      id: "1",
-      title: "Building A Growth Mindset",
-      tagline: "Transform your thinking, transform your life",
-      coverImage: "/placeholder.svg?height=300&width=800",
-      description:
-        "Develop the mental frameworks and habits that successful people use to overcome challenges, learn from failures, and continuously improve. This comprehensive course will help you shift from a fixed mindset to a growth mindset.",
-      duration: "2h 30m",
-      modules: 23,
-      level: "Beginner",
-      instructor: {
-        name: "Dr. Sarah Johnson",
-        bio: "Psychologist and mindset coach with 15+ years of experience",
-        avatar: "/placeholder.svg?height=60&width=60",
-      },
-      learningOutcomes: [
-        "Understand the difference between fixed and growth mindsets",
-        "Develop resilience in the face of challenges",
-        "Learn to embrace failure as a learning opportunity",
-        "Build habits that support continuous growth",
-        "Apply growth mindset principles to your career and relationships",
-      ],
-      rewards: {
-        badge: "Growth Mindset Champion",
-        certificate: "Certificate of Completion",
-        challenges: 3,
-      },
-      progress: 0,
-      modules_outline: [
-        {
-          id: 1,
-          title: "Introduction to Growth Mindset",
-          duration: "20 min",
-          locked: false,
-          lessons: [
-            { id: 1, title: "What is a Growth Mindset?", duration: "5 min", type: "video", completed: false },
-            {
-              id: 2,
-              title: "Fixed vs Growth: The Key Differences",
-              duration: "8 min",
-              type: "video",
-              completed: false,
-            },
-            { id: 3, title: "Self-Assessment: Where Are You Now?", duration: "7 min", type: "quiz", completed: false },
-          ],
-        },
-        {
-          id: 2,
-          title: "The Science Behind Growth Mindset",
-          duration: "25 min",
-          locked: true,
-          lessons: [
-            { id: 4, title: "Neuroplasticity and Learning", duration: "10 min", type: "video", completed: false },
-            {
-              id: 5,
-              title: "Research on Mindset and Performance",
-              duration: "8 min",
-              type: "reading",
-              completed: false,
-            },
-            {
-              id: 6,
-              title: "Case Studies: Growth Mindset in Action",
-              duration: "7 min",
-              type: "video",
-              completed: false,
-            },
-          ],
-        },
-        {
-          id: 3,
-          title: "Embracing Challenges",
-          duration: "30 min",
-          locked: true,
-          lessons: [
-            { id: 7, title: "Why We Avoid Challenges", duration: "6 min", type: "video", completed: false },
-            { id: 8, title: "Reframing Difficult Situations", duration: "8 min", type: "video", completed: false },
-            { id: 9, title: "The Challenge Mindset", duration: "7 min", type: "reading", completed: false },
-            {
-              id: 10,
-              title: "Practice Exercise: Embrace a Challenge",
-              duration: "9 min",
-              type: "exercise",
-              completed: false,
-            },
-          ],
-        },
-        {
-          id: 4,
-          title: "Learning from Failure",
-          duration: "28 min",
-          locked: true,
-          lessons: [
-            { id: 11, title: "Failure as Feedback", duration: "8 min", type: "video", completed: false },
-            {
-              id: 12,
-              title: "The Growth Mindset Response to Setbacks",
-              duration: "10 min",
-              type: "video",
-              completed: false,
-            },
-            { id: 13, title: "Building Resilience", duration: "10 min", type: "reading", completed: false },
-          ],
-        },
-        {
-          id: 5,
-          title: "Building Growth Habits",
-          duration: "27 min",
-          locked: true,
-          lessons: [
-            { id: 14, title: "Daily Practices for Growth", duration: "8 min", type: "video", completed: false },
-            { id: 15, title: "Creating Your Growth Plan", duration: "10 min", type: "exercise", completed: false },
-            { id: 16, title: "Maintaining Momentum", duration: "9 min", type: "video", completed: false },
-          ],
-        },
-      ],
-    },
-    "2": {
-      id: "2",
-      title: "Speak With Impact",
-      tagline: "Master the art of powerful communication",
-      coverImage: "/placeholder.svg?height=300&width=800",
-      description:
-        "Learn to communicate with confidence, clarity, and impact. Whether you're presenting to colleagues, speaking at events, or having difficult conversations, this course will help you become a more effective communicator.",
-      duration: "1h 45m",
-      modules: 18,
-      level: "Intermediate",
-      instructor: {
-        name: "Michael Chen",
-        bio: "Professional speaker and communication expert",
-        avatar: "/placeholder.svg?height=60&width=60",
-      },
-      learningOutcomes: [
-        "Develop confident speaking skills",
-        "Structure compelling presentations",
-        "Handle difficult conversations with ease",
-        "Use body language effectively",
-        "Engage and influence your audience",
-      ],
-      rewards: {
-        badge: "Communication Master",
-        certificate: "Certificate of Completion",
-        challenges: 2,
-      },
-      progress: 0,
-      modules_outline: [
-        {
-          id: 1,
-          title: "Foundations of Effective Communication",
-          duration: "22 min",
-          locked: false,
-          lessons: [
-            { id: 1, title: "The Communication Framework", duration: "6 min", type: "video", completed: false },
-            { id: 2, title: "Understanding Your Audience", duration: "8 min", type: "video", completed: false },
-            { id: 3, title: "Clarity and Conciseness", duration: "8 min", type: "reading", completed: false },
-          ],
-        },
-        {
-          id: 2,
-          title: "Building Confidence",
-          duration: "18 min",
-          locked: true,
-          lessons: [
-            { id: 4, title: "Overcoming Speaking Anxiety", duration: "10 min", type: "video", completed: false },
-            { id: 5, title: "Confidence Building Exercises", duration: "8 min", type: "exercise", completed: false },
-          ],
-        },
-        {
-          id: 3,
-          title: "Structuring Your Message",
-          duration: "25 min",
-          locked: true,
-          lessons: [
-            { id: 6, title: "The Power of Structure", duration: "7 min", type: "video", completed: false },
-            { id: 7, title: "Opening and Closing Strong", duration: "9 min", type: "video", completed: false },
-            { id: 8, title: "Storytelling Techniques", duration: "9 min", type: "reading", completed: false },
-          ],
-        },
-        {
-          id: 4,
-          title: "Advanced Speaking Techniques",
-          duration: "40 min",
-          locked: true,
-          lessons: [
-            { id: 9, title: "Body Language Mastery", duration: "12 min", type: "video", completed: false },
-            { id: 10, title: "Voice and Tone", duration: "10 min", type: "video", completed: false },
-            { id: 11, title: "Handling Q&A Sessions", duration: "8 min", type: "video", completed: false },
-            { id: 12, title: "Final Practice Session", duration: "10 min", type: "exercise", completed: false },
-          ],
-        },
-      ],
-    },
-  }
-
-  return courses[courseId as keyof typeof courses] || courses["1"]
-}
 
 const getLessonIcon = (type: string) => {
   switch (type) {
@@ -230,11 +32,94 @@ const getLessonIcon = (type: string) => {
 
 export default function CourseEnrollPage({ params }: { params: Promise<{ courseId: string }> }) {
   const { courseId } = React.use(params);
-  const course = getCourseData(courseId);
+  const router = useRouter();
+  const [course, setCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [expandedModules, setExpandedModules] = useState<number[]>([1]) // First module expanded by default
+  const [showBadgesDropdown, setShowBadgesDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    async function fetchCourse() {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await fetch(`http://localhost:3001/courses/${courseId}/content`);
+        if (!res.ok) throw new Error('Failed to fetch course content');
+        const data = await res.json();
+        setCourse(data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch course content');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCourse();
+  }, [courseId]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowBadgesDropdown(false);
+      }
+    }
+    if (showBadgesDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showBadgesDropdown]);
 
   const toggleModule = (moduleId: number) => {
     setExpandedModules((prev) => (prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]))
+  }
+
+  const handleStartLearning = () => {
+    // Find the first unlocked module and its first lesson
+    const firstUnlockedModule = course.modules_outline.find((module: any) => !module.locked);
+    if (firstUnlockedModule && firstUnlockedModule.lessons.length > 0) {
+      const firstLesson = firstUnlockedModule.lessons[0];
+      router.push(`/courses/${courseId}/learn/${firstLesson.id}`);
+    }
+  }
+
+  const handleStartModule = (module: any) => {
+    if (module.lessons.length > 0) {
+      const firstLesson = module.lessons[0];
+      router.push(`/courses/${courseId}/learn/${firstLesson.id}`);
+    }
+  }
+
+  const handleStartLesson = (lessonId: string) => {
+    router.push(`/courses/${courseId}/learn/${lessonId}`);
+  }
+
+  const handleContinueLearning = () => {
+    // Find the next lesson to continue from based on progress
+    // For now, just navigate to the first lesson
+    const firstUnlockedModule = course.modules_outline.find((module: any) => !module.locked);
+    if (firstUnlockedModule && firstUnlockedModule.lessons.length > 0) {
+      const firstLesson = firstUnlockedModule.lessons[0];
+      router.push(`/courses/${courseId}/learn/${firstLesson.id}`);
+    }
+  }
+
+  if (loading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center text-gray-500">Loading course...</div>
+    </div>;
+  }
+  if (error) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center text-red-500">{error}</div>
+    </div>;
+  }
+  if (!course) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="text-center text-gray-500">No course found.</div>
+    </div>;
   }
 
   return (
@@ -301,7 +186,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
               </CardHeader>
               <CardContent>
                 <ul className="space-y-3">
-                  {course.learningOutcomes.map((outcome, index) => (
+                  {course.objectives.map((outcome: string, index: number) => (
                     <li key={index} className="flex items-start">
                       <CheckCircle className="h-5 w-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
                       <span className="text-gray-700">{outcome}</span>
@@ -318,7 +203,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {course.modules_outline.map((module, index) => (
+                  {course.modules.map((module: any, index: number) => (
                     <Collapsible
                       key={module.id}
                       open={expandedModules.includes(module.id)}
@@ -349,7 +234,14 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
                           </div>
                           <div className="flex items-center">
                             {!module.locked && (
-                              <Button variant="outline" className="text-blue-600 mr-2">
+                              <Button 
+                                variant="outline" 
+                                className="text-blue-600 mr-2"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStartModule(module);
+                                }}
+                              >
                                 Start
                               </Button>
                             )}
@@ -364,7 +256,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
 
                       <CollapsibleContent className="px-4 pb-2">
                         <div className="ml-8 mt-2 space-y-2">
-                          {module.lessons.map((lesson, lessonIndex) => (
+                          {module.lessons.map((lesson: any, lessonIndex: number) => (
                             <div
                               key={lesson.id}
                               className={`flex items-center justify-between p-3 rounded-md border ${
@@ -389,7 +281,14 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
                                 </div>
                               </div>
                               {!module.locked && (
-                                <Button variant="outline" className="text-xs">
+                                <Button 
+                                  variant="outline" 
+                                  className="text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStartLesson(lesson.id);
+                                  }}
+                                >
                                   {lesson.completed ? "Review" : "Start"}
                                 </Button>
                               )}
@@ -414,11 +313,11 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
               <CardContent className="space-y-4">
                 <div className="flex items-center">
                   <Clock className="h-5 w-5 text-gray-500 mr-3" />
-                  <span className="text-gray-700">{course.duration}</span>
+                  <span className="text-gray-700">{course.duration} minutes</span>
                 </div>
                 <div className="flex items-center">
                   <BookOpen className="h-5 w-5 text-gray-500 mr-3" />
-                  <span className="text-gray-700">{course.modules} modules</span>
+                  <span className="text-gray-700">{Array.isArray(course.modules) ? course.modules.length : course.modules} modules</span>
                 </div>
                 <div className="flex items-center">
                   <Badge variant="secondary">{course.level}</Badge>
@@ -438,7 +337,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
                     <AvatarFallback>
                       {course.instructor.name
                         .split(" ")
-                        .map((n) => n[0])
+                        .map((n: string) => n[0])
                         .join("")}
                     </AvatarFallback>
                   </Avatar>
@@ -450,16 +349,40 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
               </CardContent>
             </Card>
 
-            {/* What You'll Earn */}
+            {/* Rewards */}
             <Card>
               <CardHeader>
-                <CardTitle>{"What You'll"} Earn</CardTitle>
+                <CardTitle>Rewards</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center">
-                  <Award className="h-5 w-5 text-yellow-600 mr-3" />
-                  <span className="text-gray-700">{course.rewards.badge}</span>
-                </div>
+                {Array.isArray(course.rewards?.badges) && course.rewards.badges.length > 0 && (
+                  <div ref={dropdownRef} className="relative flex items-center">
+                    <Award className="h-5 w-5 text-yellow-600 mr-3" />
+                    <span className="text-gray-700 mr-2">{course.rewards.badges.length} Badges</span>
+                    <button
+                      className="flex items-center text-blue-600 hover:underline"
+                      onClick={() => setShowBadgesDropdown((open) => !open)}
+                      type="button"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    {showBadgesDropdown && (
+                      <div className="absolute left-0 mt-2 w-64 bg-white border rounded shadow-lg z-10">
+                        <ul className="py-2">
+                          {course.rewards.badges.map((badge: any) => (
+                            <li key={badge.id} className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100">
+                              <img src={badge.iconUrl} alt={badge.name} className="h-6 w-6 rounded-full" />
+                              <div>
+                                <div className="font-medium">{badge.name}</div>
+                                <div className="text-xs text-gray-500">{badge.description}</div>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-center">
                   <Certificate className="h-5 w-5 text-blue-600 mr-3" />
                   <span className="text-gray-700">{course.rewards.certificate}</span>
@@ -480,7 +403,12 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
                 <CardContent>
                   <Progress value={course.progress} className="mb-2" />
                   <p className="text-sm text-gray-600">{course.progress}% complete</p>
-                  <Button className="w-full mt-4 bg-green-600 hover:bg-green-700">Continue Learning</Button>
+                  <Button 
+                    className="w-full mt-4 bg-green-600 hover:bg-green-700"
+                    onClick={handleContinueLearning}
+                  >
+                    Continue Learning
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -489,7 +417,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
             {course.progress === 0 && (
               <Card>
                 <CardContent className="pt-6">
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-6 flex items-center justify-center" onClick={handleStartLearning}>
                     <Play className="h-5 w-5 mr-2" />
                     Start Learning
                   </Button>

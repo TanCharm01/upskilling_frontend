@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -26,195 +26,7 @@ import {
   Lock,
 } from "lucide-react"
 import Link from "next/link"
-
-// Mock course data with modules structure
-const getCourseData = (courseId: string, lessonId: string) => {
-  const courseData = {
-    id: courseId,
-    title: "Speak with Impact",
-    currentLesson: {
-      id: lessonId,
-      title: "Confidence",
-      duration: "4 min",
-      videoUrl: "/placeholder.svg?height=400&width=800",
-      transcript: [
-        {
-          timestamp: "0:00",
-          text: "Confidence isn't something you're born with—it's something you build. This course offers practical tips to help you speak up, stay calm under pressure, and trust your voice. Whether you're meeting new people or presenting an idea, you'll show up with self-assurance. Confidence isn't something you're born with—it's something you build. This course offers practical tips to help you speak up, stay calm under pressure, and trust your voice. Whether you're meeting new people or presenting an idea, you'll show up with self-assurance.",
-        },
-        {
-          timestamp: "0:30",
-          text: "Confidence isn't something you're born with—it's something you build. This course offers practical tips to help you speak up, stay calm under pressure, and trust your voice. Whether you're meeting new people or presenting an idea, you'll show up with self-assurance.",
-        },
-        {
-          timestamp: "1:00",
-          text: "Confidence isn't something you're born with—it's something you build. This course offers practical tips to help you speak up, stay calm under pressure, and trust your voice. Whether you're meeting new people or presenting an idea, you'll show up with self-assurance.",
-        },
-      ],
-      notes: [
-        {
-          title: "Key Confidence Building Strategies",
-          content:
-            "• Practice power posing for 2 minutes before important conversations\n• Use positive self-talk to reframe negative thoughts\n• Start with small speaking opportunities to build momentum\n• Focus on your message rather than your nervousness",
-        },
-        {
-          title: "Body Language Tips",
-          content:
-            "• Maintain eye contact for 3-5 seconds at a time\n• Keep shoulders back and chest open\n• Use purposeful hand gestures to emphasize points\n• Stand with feet shoulder-width apart for stability",
-        },
-        {
-          title: "Voice Projection Techniques",
-          content:
-            "• Breathe from your diaphragm, not your chest\n• Speak slowly and clearly - rushing makes you sound nervous\n• Vary your tone to keep listeners engaged\n• Practice speaking at different volumes",
-        },
-        {
-          title: "Mental Preparation",
-          content:
-            "• Visualize successful outcomes before speaking\n• Prepare 3 key points you want to communicate\n• Remember that most people want you to succeed\n• Focus on serving your audience rather than impressing them",
-        },
-      ],
-      resources: [
-        {
-          title: "TED Talk: Your Body Language May Shape Who You Are",
-          description: "Amy Cuddy's famous talk on power posing and confidence",
-          url: "https://www.ted.com/talks/amy_cuddy_your_body_language_may_shape_who_you_are",
-          type: "video",
-        },
-        {
-          title: "Public Speaking Anxiety: A Guide",
-          description: "Comprehensive guide to overcoming speaking anxiety",
-          url: "https://example.com/speaking-anxiety-guide",
-          type: "article",
-        },
-        {
-          title: "Voice Training Exercises",
-          description: "Daily exercises to improve your speaking voice",
-          url: "https://example.com/voice-exercises",
-          type: "pdf",
-        },
-        {
-          title: "Confidence Building Workbook",
-          description: "Interactive exercises to build lasting confidence",
-          url: "https://example.com/confidence-workbook",
-          type: "pdf",
-        },
-        {
-          title: "Toastmasters International",
-          description: "Find local speaking clubs to practice your skills",
-          url: "https://www.toastmasters.org",
-          type: "website",
-        },
-      ],
-    },
-    modules: [
-      {
-        id: 1,
-        title: "Foundations of Effective Communication",
-        duration: "12 min",
-        locked: false,
-        lessons: [
-          {
-            id: "1",
-            title: "Introduction",
-            duration: "4 min",
-            type: "video",
-            completed: true,
-          },
-          {
-            id: "2",
-            title: "Confidence",
-            duration: "4 min",
-            type: "video",
-            completed: false,
-            current: true,
-          },
-          {
-            id: "3",
-            title: "Body language",
-            duration: "4 min",
-            type: "video",
-            completed: false,
-          },
-        ],
-      },
-      {
-        id: 2,
-        title: "Building Your Speaking Skills",
-        duration: "16 min",
-        locked: false,
-        lessons: [
-          {
-            id: "4",
-            title: "Assessment 1",
-            duration: "4 min",
-            type: "quiz",
-            completed: false,
-          },
-          {
-            id: "5",
-            title: "Finding your voice",
-            duration: "4 min",
-            type: "video",
-            completed: false,
-          },
-          {
-            id: "6",
-            title: "Active Listening & Response",
-            duration: "4 min",
-            type: "video",
-            completed: false,
-          },
-          {
-            id: "7",
-            title: "Assessment 2",
-            duration: "4 min",
-            type: "quiz",
-            completed: false,
-          },
-        ],
-      },
-      {
-        id: 3,
-        title: "Advanced Communication Techniques",
-        duration: "8 min",
-        locked: true,
-        lessons: [
-          {
-            id: "8",
-            title: "Crafting Clear Messages",
-            duration: "4 min",
-            type: "reading",
-            completed: false,
-          },
-          {
-            id: "9",
-            title: "Non-Verbal Communication",
-            duration: "4 min",
-            type: "video",
-            completed: false,
-          },
-        ],
-      },
-      {
-        id: 4,
-        title: "Course Completion",
-        duration: "4 min",
-        locked: true,
-        lessons: [
-          {
-            id: "10",
-            title: "Final Assessment",
-            duration: "4 min",
-            type: "quiz",
-            completed: false,
-          },
-        ],
-      },
-    ],
-  }
-
-  return courseData
-}
+import { decodeJWT } from "@/lib/utils"
 
 const getLessonIcon = (type: string, completed: boolean, current: boolean, locked = false) => {
   if (locked) {
@@ -247,17 +59,100 @@ export default function CourseLearningPage({
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab] = useState("transcription")
   const [expandedModules, setExpandedModules] = useState<number[]>([1]) // First module expanded by default
-  const course = getCourseData(params.courseId, params.lessonId)
+  const [course, setCourse] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchUserAndCourse() {
+      setLoading(true)
+      setError("")
+      
+      try {
+        // Get user ID from JWT token
+        if (typeof window === "undefined") return
+        const token = localStorage.getItem("token")
+        if (!token) {
+          setError("No token found. Please login.")
+          setLoading(false)
+          return
+        }
+        
+        const userInfo = decodeJWT(token)
+        const currentUserId = userInfo?.id
+        if (!currentUserId) {
+          setError("Could not get user ID from token.")
+          setLoading(false)
+          return
+        }
+        setUserId(currentUserId)
+
+        // Fetch course content with user ID and current lesson ID
+        const res = await fetch(
+          `http://localhost:3001/courses/${params.courseId}/content?userId=${currentUserId}&currentLessonId=${params.lessonId}`
+        )
+        if (!res.ok) throw new Error("Failed to fetch course content")
+        const data = await res.json()
+        setCourse(data)
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch course content")
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchUserAndCourse()
+  }, [params.courseId, params.lessonId])
 
   const toggleModule = (moduleId: number) => {
     setExpandedModules((prev) => (prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]))
   }
 
+  if (loading) {
+    return (
+      <>
+        <CourseNavbar />
+        <div className="min-h-screen bg-white flex pt-[64px]">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-gray-500">Loading course content...</div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  if (error) {
+    return (
+      <>
+        <CourseNavbar />
+        <div className="min-h-screen bg-white flex pt-[64px]">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-red-500">{error}</div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  if (!course) {
+    return (
+      <>
+        <CourseNavbar />
+        <div className="min-h-screen bg-white flex pt-[64px]">
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center text-gray-500">No course found.</div>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   // Find current lesson for navigation
   let currentLessonIndex = -1
   const allLessons: any[] = []
-  course.modules.forEach((module) => {
-    module.lessons.forEach((lesson) => {
+  course.modules.forEach((module: any) => {
+    module.lessons.forEach((lesson: any) => {
       allLessons.push(lesson)
       if (lesson.current) {
         currentLessonIndex = allLessons.length - 1
@@ -284,7 +179,7 @@ export default function CourseLearningPage({
 
             {/* Course Modules */}
             <div className="space-y-2">
-              {course.modules.map((module, moduleIndex) => (
+              {course.modules.map((module: any, moduleIndex: number) => (
                 <div key={module.id}>
                   {/* Module Header */}
                   <div
@@ -324,7 +219,7 @@ export default function CourseLearningPage({
                   {/* Module Lessons */}
                   {expandedModules.includes(module.id) && !module.locked && (
                     <div className="ml-4 mt-2 space-y-1">
-                      {module.lessons.map((lesson, lessonIndex) => (
+                      {module.lessons.map((lesson: any, lessonIndex: number) => (
                         <Link
                           key={lesson.id}
                           href={`/courses/${params.courseId}/learn/${lesson.id}`}
@@ -396,10 +291,10 @@ export default function CourseLearningPage({
                 <CardContent className="p-0">
                   <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
                     <video
-                      src="https://www.w3schools.com/html/mov_bbb.mp4"
+                      src={course.currentLesson.videoUrl}
                       controls
                       className="w-full h-full object-cover"
-                      poster="https://peach.blender.org/wp-content/uploads/title_anouncement.jpg?x11217"
+                      poster={course.currentLesson.videoUrl}
                     />
                   </div>
                 </CardContent>
@@ -436,7 +331,7 @@ export default function CourseLearningPage({
                         </div>
                       </div>
                       <div className="space-y-4">
-                        {course.currentLesson.transcript.map((item, index) => (
+                        {course.currentLesson.transcript.map((item: any, index: number) => (
                           <div key={index} className="flex space-x-4">
                             <span className="text-sm font-mono text-blue-600 min-w-[3rem]">{item.timestamp}</span>
                             <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
@@ -451,7 +346,7 @@ export default function CourseLearningPage({
                   <Card>
                     <CardContent className="p-6">
                       <div className="space-y-6">
-                        {course.currentLesson.notes.map((note, index) => (
+                        {course.currentLesson.notes.map((note: any, index: number) => (
                           <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
                             <h4 className="font-semibold text-gray-900 mb-2 text-left">{note.title}</h4>
                             <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
@@ -468,7 +363,7 @@ export default function CourseLearningPage({
                   <Card>
                     <CardContent className="p-6">
                       <div className="space-y-4">
-                        {course.currentLesson.resources.map((resource, index) => (
+                        {course.currentLesson.resources.map((resource: any, index: number) => (
                           <div
                             key={index}
                             className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"

@@ -3,8 +3,62 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { decodeJWT } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CourseCatalogPage() {
+  const [user, setUser] = useState<{ name?: string; avatar?: string; tagline?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [courses, setCourses] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchUser() {
+      if (typeof window === "undefined") return;
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("No token found. Please login.");
+        setLoading(false);
+        return;
+      }
+      try {
+        const res = await fetch("http://localhost:3001/dashboard", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Failed to fetch user data");
+        const data = await res.json();
+        setUser(data.user);
+      } catch (err) {
+        // fallback to JWT decode if fetch fails
+        const userInfo = decodeJWT(token);
+        setUser(userInfo);
+        setError("Could not fetch full user profile, using token info only.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        setLoading(true);
+        setError("");
+        const res = await fetch("http://localhost:3001/courses/catalog");
+        if (!res.ok) throw new Error("Failed to fetch courses");
+        const data = await res.json();
+        setCourses(data);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch courses");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchCourses();
+  }, []);
+
   const filterCategories = [
     "All",
     "Most Popular",
@@ -15,71 +69,9 @@ export default function CourseCatalogPage() {
     "Personal Growth",
     "Interviews",
   ];
-
   const additionalCategories = ["Personal Growth", "Money Matters", "View more categories"];
 
-  const courses = [
-    {
-      id: 1,
-      title: "Building A Growth Mindset",
-      lessons: "24 Lessons",
-      duration: "2h 30m",
-      description:
-        "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
-      image: "/placeholder.svg?height=200&width=300",
-      category: "Personal Growth",
-    },
-    {
-      id: 2,
-      title: "Speak With Impact",
-      lessons: "18 Lessons",
-      duration: "1h 45m",
-      description:
-        "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
-      image: "/placeholder.svg?height=200&width=300",
-      category: "Communication Skills",
-    },
-    {
-      id: 3,
-      title: "Networking",
-      lessons: "15 Lessons",
-      duration: "1h 20m",
-      description:
-        "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
-      image: "/placeholder.svg?height=200&width=300",
-      category: "Career Skills",
-    },
-    {
-      id: 4,
-      title: "Nail the Interview",
-      lessons: "24 Lessons",
-      duration: "2h 45m",
-      description:
-        "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
-      image: "/placeholder.svg?height=200&width=300",
-      category: "Career Skills",
-    },
-    {
-      id: 5,
-      title: "Budget Like a Boss",
-      lessons: "19 Lessons",
-      duration: "1h 55m",
-      description:
-        "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
-      image: "/placeholder.svg?height=200&width=300",
-      category: "Money Matters",
-    },
-    {
-      id: 6,
-      title: "Google Workspace Basics",
-      lessons: "14 Lessons",
-      duration: "1h 15m",
-      description:
-        "Get ready for the world of work. Whether you're crafting your first CV or preparing for interviews, this track gives you the practical tools to stand out in any hiring process.",
-      image: "/placeholder.svg?height=200&width=300",
-      category: "Digital Tools",
-    },
-  ];
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-white">
@@ -102,10 +94,26 @@ export default function CourseCatalogPage() {
               </nav>
             </div>
             <div className="flex items-center space-x-4">
-              <Button variant="outline" className="rounded-full bg-transparent">
-                Sign up
-              </Button>
-              <Button className="rounded-full bg-gray-900 hover:bg-gray-800">Log in</Button>
+              {loading ? (
+                <div className="h-10 w-24 bg-gray-200 animate-pulse rounded-full" />
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <div className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center" style={{ backgroundColor: user?.avatar ? undefined : '#0747A1' }}>
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt="User Avatar"
+                        className="h-10 w-10 object-cover"
+                      />
+                    ) : (
+                      <span className="text-white text-lg font-semibold">
+                        {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium">{user?.name || "User"}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -167,39 +175,54 @@ export default function CourseCatalogPage() {
 
           {/* Course Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {courses.map((course) => (
-              <Card
-                key={course.id}
-                className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-              >
-                <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                  <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
-                </div>
-                <CardHeader className="p-0">
-                  <CardTitle className="text-lg font-semibold text-gray-900 mb-2">{course.title}</CardTitle>
-                  <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-                    <span>{course.lessons}</span>
-                    <span>{course.duration}</span>
+            {loading ? (
+              <div className="col-span-full text-center py-12 text-gray-500">Loading courses...</div>
+            ) : error ? (
+              <div className="col-span-full text-center py-12 text-red-500">{error}</div>
+            ) : courses.length === 0 ? (
+              <div className="col-span-full text-center py-12 text-gray-500">No courses found.</div>
+            ) : (
+              courses.map((course) => (
+                <Card
+                  key={course.id}
+                  className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow cursor-pointer h-full flex flex-col"
+                  onClick={() => router.push(`/courses/${course.id}/content`)}
+                >
+                  <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                    <img src={course.thumbnailUrl} alt={course.title} className="w-full h-full object-cover" />
                   </div>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">{course.description}</p>
-                </CardContent>
-                <CardFooter className="p-6 pt-0">
-                  <Link href={`/courses/${course.id}/enroll`} className="w-full">
-                    <Button className="w-full rounded-md border-gray-300 text-white bg-[#0747A1] hover:bg-[#053674]">
-                      Enroll
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            ))}
+                  <div className="flex flex-col flex-1">
+                    <CardHeader className="p-0">
+                      <CardTitle className="text-lg font-semibold text-gray-900 mb-2">{course.title}</CardTitle>
+                      <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
+                        <span>{course.totalLessons} Lessons</span>
+                        <span>{Math.round(course.duration / 60) > 0 ? `${Math.floor(course.duration / 60)}h ` : ''}{course.duration % 60}m</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6 flex-1 flex flex-col">
+                      <p className="text-sm text-gray-600 leading-relaxed line-clamp-3 flex-1">{course.description}</p>
+                    </CardContent>
+                    <CardFooter className="p-6 pt-0 mt-auto">
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          router.push(`/courses/${course.id}/content`);
+                        }}
+                        className="w-full rounded-md border-gray-300 text-white bg-[#0747A1] hover:bg-[#053674] px-4 py-2"
+                      >
+                        Enroll
+                      </button>
+                    </CardFooter>
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
 
           {/* Show More Button */}
           <div className="text-left">
             <Button variant="outline" className="rounded-md bg-transparent">
-              Show 6 more
+              Show more
             </Button>
           </div>
         </div>
