@@ -33,7 +33,7 @@ export default function LandingPage() {
         </header>
 
         {/* Hero Section - Grid for content and image */}
-        <main className="grid grid-cols-1 md:grid-cols-3 items-center gap-6">
+        <main className="grid grid-cols-1 md:grid-cols-3 items-center gap-6 pb-20 mt-10">
           {/* Left Content */}
           <div className="col-span-2 space-y-6">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-medium leading-tight">
@@ -71,11 +71,11 @@ export default function LandingPage() {
           </div>
 
           {/* Right Image Placeholder (with frame) */}
-          <div className="py-12">
+          <div className="p-8 h-[500px] w-[400px] overflow-hidden rounded-lg">
             <Image
               src="/hero_image.avif"
               alt="Placeholder for student image"
-              width={480}
+              width={500}
               height={600}
               className="object-cover object-top h-full w-full rounded-lg "
             />
