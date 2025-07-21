@@ -43,10 +43,10 @@ export default function LandingPage() {
               Enhance your employability with our upskilling courses.
             </p>
             <div className="flex justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
+              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs">
                 Know More &gt;&gt;
               </Button>
-              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
+              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs">
                 Get Started &gt;&gt;
               </Button>
             </div>
@@ -57,12 +57,12 @@ export default function LandingPage() {
                 <span className="text-4xl font-bold">1100+</span>
                 <span className="text-gray-600">Active Students</span>
               </div>
-              <div className="h-16 w-px bg-gray-300 hidden sm:block" /> {/* Vertical divider */}
+              <div className="h-16 w-1 bg-black hidden sm:block" /> {/* Vertical divider */}
               <div className="flex flex-col items-start">
                 <span className="text-4xl font-bold">100+</span>
                 <span className="text-gray-600">Courses</span>
               </div>
-              <div className="h-16 w-px bg-gray-300 hidden sm:block" /> {/* Vertical divider */}
+              <div className="h-16 w-1  bg-black hidden sm:block" /> {/* Vertical divider */}
               <div className="flex flex-col items-start">
                 <span className="text-4xl font-bold">10+</span>
                 <span className="text-gray-600">Course Categories</span>

@@ -33,10 +33,10 @@ export default function StudentSuccessStories() {
   ]
 
   return (
-    <section className="w-full max-w-[1400px] bg-white rounded-3xl shadow-lg p-8 md:p-16 lg:p-24 mx-auto mt-8">
+    <section className="w-full  bg-white  mt-20">
       <div className="text-center mb-12">
-        <h2 className="text-4xl md:text-5xl font-bold mb-4">Student Success Stories</h2>
-        <p className="text-lg md:text-xl text-gray-700 max-w-2xl mx-auto">
+        <h2 className="text-4xl md:text-5xl font-medium mb-4">Student Success Stories</h2>
+        <p className="text-lg md:text-xl text-gray-700">
           Discover how the Uncommon upskilling platform has transformed careers and empowered individuals.
         </p>
       </div>
@@ -47,18 +47,17 @@ export default function StudentSuccessStories() {
         ))}
       </div>
       {/*Call to action section content */}
-      <div className="text-center mt-16 pt-8 border-t border-gray-200">
+      <div className="text-center mt-16 pt-8 border-gray-200">
         {" "}
-        {/* Added top border for subtle separation */}
-        <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Your Next Step Begins Here!</h2>
-        <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto mb-10">
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-medium mb-6">Your Next Step Begins Here!</h2>
+        <p className="text-lg md:text-xl text-gray-700  mb-10 mt-10">
           This platform was created to help Uncommon alumni keep growing beyond the bootcamp. It fills in the gaps,
           covering soft skills, advanced digital tools, and new career pathways that weren’t fully explored during the
           one-year program. Whether you're refining your communication, boosting your tech skills, or preparing for
           real-world challenges, this space is here to support your next step.
         </p>
-        <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-8 py-3 rounded-md text-lg">
-          Get Started &gt;&gt;
+        <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs">
+                Get Started &gt;&gt;
         </Button>
       </div>
 

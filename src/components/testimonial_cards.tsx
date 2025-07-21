@@ -11,9 +11,9 @@ interface TestimonialCardProps {
 
 export default function TestimonialCard({ name, course, quote, rating, imageSrc }: TestimonialCardProps) {
   return (
-    <div className="flex flex-col items-start p-6 bg-white rounded-lg shadow-md">
+    <div className="w-[380px] flex flex-col items-start p-8 bg-white rounded-lg shadow-md h-[295px]">
       <div className="flex items-center mb-4">
-        <div className="relative w-16 h-16 rounded-lg overflow-hidden mr-4">
+        <div className="relative w-16 h-16 rounded-lg overflow-hidden mr-10">
           <Image
             src={imageSrc || "/placeholder.svg?height=64&width=64"}
             alt={`Profile picture of ${name}`}

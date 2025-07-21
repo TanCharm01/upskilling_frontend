@@ -60,10 +60,10 @@ export default function BrowseCourses() {
   ]
 
   return (
-    <section className="w-full max-w-[1400px] bg-white rounded-3xl shadow-lg mx-auto mt-8">
+    <section className="w-full max-w-[1400px] bg-white mt-8">
       <div className="text-center mb-12">
         <h2 className="text-4xl md:text-5xl font-medium mb-4">Browse Courses</h2>
-        <p className="text-lg md:text-xl text-gray-700 max-w-2xl mx-auto">
+        <p className="text-lg md:text-xl text-gray-700">
           Explore a wide range of courses designed to help you learn new skills and advance your career.
         </p>
       </div>
