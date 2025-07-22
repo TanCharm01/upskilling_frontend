@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
 import { Search, BookOpen, Award, LayoutDashboard, GraduationCap, User, LogOut, CheckCircle } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from 'next/navigation';
 
 interface DashboardUser {
   name: string;
@@ -55,6 +56,7 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [activeNav, setActiveNav] = useState("dashboard")
+  const router = useRouter();
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
@@ -105,6 +107,14 @@ export default function StudentDashboard() {
   // Helper for fallback image
   function handleImgError(e: React.SyntheticEvent<HTMLImageElement, Event>) {
     e.currentTarget.src = DEFAULT_COURSE_IMAGE;
+  }
+
+  function getNextLessonId(course: any) {
+    if (!course?.modules) return '';
+    const allLessons = course.modules.flatMap((module: any) => module.lessons);
+    const lastCompletedIdx = allLessons.map((l: any) => !!l.completed).lastIndexOf(true);
+    const nextLesson = allLessons[lastCompletedIdx + 1] || allLessons[0];
+    return nextLesson?.id;
   }
 
   return (
@@ -227,15 +237,23 @@ export default function StudentDashboard() {
                         </span>
                       </div>
                       <div className="mb-3">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                          <span>{item.progress ? `${item.progress}%` : "In Progress"}</span>
+                        <div className="flex justify-between text-xs text-gray-400 mb-1">
+                          <span>Progress</span>
+                          <span>{Math.round((item.progress ?? 0) * 100)}%</span>
                         </div>
-                        <Progress value={item.progress || 0} className="h-2" />
+                        <Progress value={Math.round((item.progress ?? 0) * 100)} className="h-2" />
                       </div>
                       <div className="mt-auto">
-                        <Link href={`/courses/${item.course.id}/learn/1`}>
-                          <Button className="w-full bg-[#0747A1] hover:bg-[#05316e]">Resume</Button>
-                        </Link>
+                        <Button
+                          className="w-full bg-[#0747A1] hover:bg-[#05316e]"
+                          onClick={() => {
+                            if (item.resumeLessonId) {
+                              router.push(`/courses/${item.course.id}/learn/${item.resumeLessonId}`);
+                            }
+                          }}
+                        >
+                          Resume
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -331,7 +349,7 @@ export default function StudentDashboard() {
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-semibold text-gray-900">{course.title}</h3>
                       <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.level}</span>
-                    </div>
+                      </div>
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">{course.description}</p>
                     <div className="flex items-center text-xs text-gray-500 mb-3">
                       <span>

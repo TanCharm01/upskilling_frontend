@@ -140,6 +140,17 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
           </div>
         </div>
       </header>
+      <button
+        onClick={() => router.push('/courses')}
+        className="mb-4 flex items-center text-gray-500 hover:text-blue-600 bg-transparent border-none outline-none cursor-pointer"
+        style={{ background: 'transparent', boxShadow: 'none' }}
+        aria-label="Back to Courses"
+      >
+        <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Back to Courses</span>
+      </button>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Course Cover & Title */}

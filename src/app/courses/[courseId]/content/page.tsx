@@ -160,6 +160,17 @@ export default function CourseContentPage() {
           <p className="text-lg opacity-90 text-white">{course.tagline}</p>
         </div>
       </div>
+      <button
+        onClick={() => router.push('/courses')}
+        className="mb-4 flex items-center text-gray-500 hover:text-blue-600 bg-transparent border-none outline-none cursor-pointer"
+        style={{ background: 'transparent', boxShadow: 'none' }}
+        aria-label="Back to Courses"
+      >
+        <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Back to Courses</span>
+      </button>
 
       <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -317,11 +328,12 @@ export default function CourseContentPage() {
                     <span className="text-gray-700">{course.rewards.certificate}</span>
                   </div>
                 )}
-                {course.rewards?.challenges && (
+                {course.rewards?.challenges > 0 && (
                   <div className="flex items-center">
-                    {/* Use a challenge icon, e.g., Trophy */}
                     <Trophy className="h-5 w-5 text-purple-600 mr-3" />
-                    <span className="text-gray-700">{course.rewards.challenges} Challenge{course.rewards.challenges === 1 ? '' : 's'}</span>
+                    <span className="text-gray-700">
+                      {course.rewards.challenges} Challenge{course.rewards.challenges === 1 ? '' : 's'}
+                    </span>
                   </div>
                 )}
               </CardContent>

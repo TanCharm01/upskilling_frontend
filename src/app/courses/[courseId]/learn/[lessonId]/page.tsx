@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -54,11 +54,12 @@ const getLessonIcon = (type: string, completed: boolean, current: boolean, locke
 export default function CourseLearningPage({
   params,
 }: {
-  params: { courseId: string; lessonId: string }
+  params: Promise<{ courseId: string; lessonId: string }>
 }) {
+  const { courseId, lessonId } = use(params);
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab] = useState("transcription")
-  const [expandedModules, setExpandedModules] = useState<number[]>([1]) // First module expanded by default
+  const [expandedModules, setExpandedModules] = useState<string[]>([])
   const [course, setCourse] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -90,7 +91,7 @@ export default function CourseLearningPage({
 
         // Fetch course content with user ID and current lesson ID
         const res = await fetch(
-          `http://localhost:3001/courses/${params.courseId}/content?userId=${currentUserId}&currentLessonId=${params.lessonId}`
+          `http://localhost:3001/courses/${courseId}/content?userId=${currentUserId}&currentLessonId=${lessonId}`
         )
         if (!res.ok) throw new Error("Failed to fetch course content")
         const data = await res.json()
@@ -103,66 +104,82 @@ export default function CourseLearningPage({
     }
     
     fetchUserAndCourse()
-  }, [params.courseId, params.lessonId])
+  }, [courseId, lessonId])
 
-  const toggleModule = (moduleId: number) => {
+  // Track lesson access on page load
+  useEffect(() => {
+    if (!userId || !courseId || !lessonId) return;
+    fetch('http://localhost:3001/progress/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        courseId: courseId,
+        lessonId: lessonId
+      })
+    });
+  }, [userId, courseId, lessonId]);
+
+  // Mark lesson as complete
+  const [markingComplete, setMarkingComplete] = useState(false);
+  // Always check the current lesson's completed status from the latest course data
+  const completed = !!course?.modules
+    ?.flatMap((module: any) => module.lessons)
+    .find((lesson: any) => lesson.id === course.currentLesson.id)?.completed;
+
+  async function markLessonComplete() {
+    setMarkingComplete(true);
+    await fetch('http://localhost:3001/progress', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        lessonId: lessonId,
+        isCompleted: true
+      })
+    });
+    // Optionally, refetch course content to update UI
+  }
+
+  // Ensure the current module is always open in the collapsible sidebar
+  useEffect(() => {
+    if (!course) return;
+    const currentModule = course.modules.find((module: any) =>
+      module.lessons.some((lesson: any) => lesson.id === course.currentLesson.id)
+    );
+    if (currentModule && !expandedModules.includes(currentModule.id)) {
+      setExpandedModules((prev) => [...prev, currentModule.id]);
+    }
+  }, [course, course?.currentLesson?.id]);
+
+  const toggleModule = (moduleId: string) => {
     setExpandedModules((prev) => (prev.includes(moduleId) ? prev.filter((id) => id !== moduleId) : [...prev, moduleId]))
   }
 
-  if (loading) {
-    return (
-      <>
-        <CourseNavbar />
-        <div className="min-h-screen bg-white flex pt-[64px]">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center text-gray-500">Loading course content...</div>
-          </div>
-        </div>
-      </>
-    )
-  }
-
-  if (error) {
-    return (
-      <>
-        <CourseNavbar />
-        <div className="min-h-screen bg-white flex pt-[64px]">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center text-red-500">{error}</div>
-          </div>
-        </div>
-      </>
-    )
-  }
-
-  if (!course) {
-    return (
-      <>
-        <CourseNavbar />
-        <div className="min-h-screen bg-white flex pt-[64px]">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center text-gray-500">No course found.</div>
-          </div>
-        </div>
-      </>
-    )
-  }
-
-  // Find current lesson for navigation
-  let currentLessonIndex = -1
-  const allLessons: any[] = []
-  course.modules.forEach((module: any) => {
+  // Find current lesson for navigation and helpers (always defined)
+  let currentLessonIndex = -1;
+  const allLessons: any[] = [];
+  const modules = course?.modules || [];
+  modules.forEach((module: any) => {
     module.lessons.forEach((lesson: any) => {
-      allLessons.push(lesson)
+      allLessons.push(lesson);
       if (lesson.current) {
-        currentLessonIndex = allLessons.length - 1
+        currentLessonIndex = allLessons.length - 1;
       }
-    })
-  })
+    });
+  });
+  const currentModule = modules.find((module: any) =>
+    module.lessons.some((lesson: any) => lesson.id === course?.currentLesson?.id)
+  );
+  const previousLesson = currentLessonIndex > 0 ? allLessons[currentLessonIndex - 1] : null;
+  const nextLesson = currentLessonIndex < allLessons.length - 1 ? allLessons[currentLessonIndex + 1] : null;
+  const isYouTubeUrl = (url: string) => url?.includes('youtube.com') || url?.includes('youtu.be');
+  const getYouTubeEmbedUrl = (url: string) => {
+    const match = url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
+    return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+  };
 
-  const previousLesson = currentLessonIndex > 0 ? allLessons[currentLessonIndex - 1] : null
-  const nextLesson = currentLessonIndex < allLessons.length - 1 ? allLessons[currentLessonIndex + 1] : null
-
+  // Always render sidebar and main layout; only lesson content is dynamic
   return (
     <>
       <CourseNavbar />
@@ -179,7 +196,7 @@ export default function CourseLearningPage({
 
             {/* Course Modules */}
             <div className="space-y-2">
-              {course.modules.map((module: any, moduleIndex: number) => (
+              {course?.modules.map((module: any, moduleIndex: number) => (
                 <div key={module.id}>
                   {/* Module Header */}
                   <div
@@ -222,7 +239,7 @@ export default function CourseLearningPage({
                       {module.lessons.map((lesson: any, lessonIndex: number) => (
                         <Link
                           key={lesson.id}
-                          href={`/courses/${params.courseId}/learn/${lesson.id}`}
+                          href={`/courses/${courseId}/learn/${lesson.id}`}
                           className={`flex items-center p-2 rounded-md transition-colors ${
                             lesson.current ? "bg-blue-50 border border-blue-200" : "hover:bg-gray-50"
                           }`}
@@ -256,15 +273,22 @@ export default function CourseLearningPage({
           <div className="bg-white border-b border-gray-100 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Link href={`/courses/${params.courseId}/enroll`} className="hover:text-blue-600">
-                  {course.title}
+                <Link href="/dashboard" className="hover:text-blue-600">
+                  {course?.title || 'Course'}
                 </Link>
                 <ChevronRight className="h-4 w-4" />
-                <span className="text-gray-900 font-medium">{course.currentLesson.title}</span>
+                {currentModule && (
+                  <>
+                    <span className="text-gray-900 font-medium">{currentModule.title}</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </>
+                )}
+                <span className="text-gray-900 font-medium">{course?.currentLesson?.title || 'Lesson'}</span>
+                {completed && <CheckCircle className="h-5 w-5 text-green-600" />}
               </div>
               <div className="flex space-x-2">
                 {previousLesson && (
-                  <Link href={`/courses/${params.courseId}/learn/${previousLesson.id}`}>
+                  <Link href={`/courses/${courseId}/learn/${previousLesson.id}`}>
                     <Button variant="outline" className="min-w-[120px] flex items-center justify-center">
                       <ChevronLeft className="h-4 w-4 mr-1" />
                       <span className="inline-block align-middle">Previous</span>
@@ -272,7 +296,7 @@ export default function CourseLearningPage({
                   </Link>
                 )}
                 {nextLesson && (
-                  <Link href={`/courses/${params.courseId}/learn/${nextLesson.id}`}>
+                  <Link href={`/courses/${courseId}/learn/${nextLesson.id}`}>
                     <Button className="bg-blue-600 hover:bg-blue-700 min-w-[120px] flex items-center justify-center">
                       <span className="inline-block align-middle">Next</span>
                       <ChevronRight className="h-4 w-4 ml-1" />
@@ -290,19 +314,34 @@ export default function CourseLearningPage({
               <Card className="mb-6 border-0">
                 <CardContent className="p-0">
                   <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-                    <video
-                      src={course.currentLesson.videoUrl}
-                      controls
-                      className="w-full h-full object-cover"
-                      poster={course.currentLesson.videoUrl}
-                    />
+                    {loading || error || !course ? (
+                      <div className="flex items-center justify-center w-full h-full text-gray-400 text-lg">{error ? error : 'Loading...'}</div>
+                    ) : course.currentLesson.videoUrl.endsWith('.pdf') ? (
+                      <iframe
+                        src={course.currentLesson.videoUrl}
+                        title={course.currentLesson.title}
+                        className="w-full h-full"
+                        style={{ minHeight: 400 }}
+                      />
+                    ) : isYouTubeUrl(course.currentLesson.videoUrl) ? (
+                      <iframe
+                        src={getYouTubeEmbedUrl(course.currentLesson.videoUrl)}
+                        title={course.currentLesson.title}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        src={course.currentLesson.videoUrl}
+                        controls
+                        className="w-full h-full object-cover"
+                        poster={course.currentLesson.videoUrl}
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Course Title */}
-              <h1 className="text-2xl font-bold text-gray-900 mb-6">{course.title}</h1>
-
               {/* Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="flex w-full justify-start">
@@ -311,88 +350,110 @@ export default function CourseLearningPage({
                   <TabsTrigger value="resources">Resources</TabsTrigger>
                 </TabsList>
                 <div className="border-b border-gray-100 w-full mb-4" />
-
                 <TabsContent value="transcription" className="mt-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          <h3 className="font-medium text-left">Language</h3>
-                          <Select defaultValue="english">
-                            <SelectTrigger className="w-40">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="english">English</SelectItem>
-                              <SelectItem value="spanish">Spanish</SelectItem>
-                              <SelectItem value="french">French</SelectItem>
-                            </SelectContent>
-                          </Select>
+                  {loading || error || !course ? (
+                    <div className="py-8 text-center text-gray-400">{error ? error : 'Loading...'}</div>
+                  ) : (
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4">
+                            <h3 className="font-medium text-left">Language</h3>
+                            <Select defaultValue="english">
+                              <SelectTrigger className="w-40">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="english">English</SelectItem>
+                                <SelectItem value="spanish">Spanish</SelectItem>
+                                <SelectItem value="french">French</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
                         </div>
-                      </div>
-                      <div className="space-y-4">
-                        {course.currentLesson.transcript.map((item: any, index: number) => (
-                          <div key={index} className="flex space-x-4">
-                            <span className="text-sm font-mono text-blue-600 min-w-[3rem]">{item.timestamp}</span>
-                            <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                        <div className="space-y-4">
+                          {course.currentLesson.transcript.map((item: any, index: number) => (
+                            <div key={index} className="flex space-x-4">
+                              <span className="text-sm font-mono text-blue-600 min-w-[3rem]">{item.timestamp}</span>
+                              <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </TabsContent>
-
                 <TabsContent value="notes" className="mt-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="space-y-6">
-                        {course.currentLesson.notes.map((note: any, index: number) => (
-                          <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
-                            <h4 className="font-semibold text-gray-900 mb-2 text-left">{note.title}</h4>
-                            <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-                              {note.content}
+                  {loading || error || !course ? (
+                    <div className="py-8 text-center text-gray-400">{error ? error : 'Loading...'}</div>
+                  ) : (
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="space-y-6">
+                          {course.currentLesson.notes.map((note: any, index: number) => (
+                            <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+                              <h4 className="font-semibold text-gray-900 mb-2 text-left">{note.title}</h4>
+                              <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                                {note.content}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </TabsContent>
-
                 <TabsContent value="resources" className="mt-6">
-                  <Card>
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        {course.currentLesson.resources.map((resource: any, index: number) => (
-                          <div
-                            key={index}
-                            className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            <div className="flex-shrink-0">
-                              {resource.type === "video" && <Play className="h-5 w-5 text-red-600" />}
-                              {resource.type === "article" && <FileText className="h-5 w-5 text-blue-600" />}
-                              {resource.type === "pdf" && <FileText className="h-5 w-5 text-green-600" />}
-                              {resource.type === "website" && <BookOpen className="h-5 w-5 text-purple-600" />}
+                  {loading || error || !course ? (
+                    <div className="py-8 text-center text-gray-400">{error ? error : 'Loading...'}</div>
+                  ) : (
+                    <Card>
+                      <CardContent className="p-6">
+                        <div className="space-y-4">
+                          {course.currentLesson.resources.map((resource: any, index: number) => (
+                            <div
+                              key={index}
+                              className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex-shrink-0">
+                                {resource.type === "video" && <Play className="h-5 w-5 text-red-600" />}
+                                {resource.type === "article" && <FileText className="h-5 w-5 text-blue-600" />}
+                                {resource.type === "pdf" && <FileText className="h-5 w-5 text-green-600" />}
+                                {resource.type === "website" && <BookOpen className="h-5 w-5 text-purple-600" />}
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900 mb-1 text-left">{resource.name || resource.title}</h4>
+                                <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
+                                <a
+                                  href={resource.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                  Open Resource →
+                                </a>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <h4 className="font-medium text-gray-900 mb-1 text-left">{resource.title}</h4>
-                              <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
-                              <a
-                                href={resource.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                              >
-                                Open Resource →
-                              </a>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </TabsContent>
               </Tabs>
+              {/* Mark as Complete Button or Completed Badge */}
+              {!loading && !error && course && (
+                completed ? (
+                  <div className="inline-flex items-center gap-2 mt-4 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    Completed
+                  </div>
+                ) : (
+                  <Button onClick={markLessonComplete} disabled={markingComplete} className="mt-4">
+                    {markingComplete ? 'Marking...' : 'Mark as Complete'}
+                  </Button>
+                )
+              )}
             </div>
           </div>
         </div>
