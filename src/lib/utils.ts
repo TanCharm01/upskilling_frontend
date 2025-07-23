@@ -4,8 +4,6 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
-<<<<<<< HEAD
-=======
 
 // Decodes a JWT and returns the payload as an object
 export function decodeJWT(token: string | null): {
@@ -40,4 +38,3 @@ export function decodeJWT(token: string | null): {
     return null;
   }
 }
->>>>>>> feat/scaffold-pages
