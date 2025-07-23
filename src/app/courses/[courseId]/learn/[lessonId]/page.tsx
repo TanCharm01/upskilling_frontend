@@ -66,6 +66,9 @@ export default function CourseLearningPage({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [userId, setUserId] = useState<string | null>(null)
+  // Add state for navigation modal
+  const [pendingNav, setPendingNav] = useState<{ direction: 'next' | 'prev', item: any } | null>(null);
+  const [showNavModal, setShowNavModal] = useState(false);
 
   async function fetchUserAndCourse() {
     setLoading(true)
@@ -124,7 +127,7 @@ export default function CourseLearningPage({
   // Always check the current lesson's completed status from the latest course data
   const completed = !!course?.modules
     ?.flatMap((module: any) => module.lessons)
-    .find((lesson: any) => lesson.id === course.currentLesson.id)?.completed;
+    .find((lesson: any) => course?.currentLesson && lesson.id === course.currentLesson.id)?.completed;
 
   async function markLessonComplete() {
     setMarkingComplete(true);
@@ -145,9 +148,16 @@ export default function CourseLearningPage({
   // Ensure the current module is always open in the collapsible sidebar
   useEffect(() => {
     if (!course) return;
-    const currentModule = course.modules.find((module: any) =>
-      module.lessons.some((lesson: any) => lesson.id === course.currentLesson.id)
-    );
+    let currentModule, currentLesson;
+    if (course.completed && course.modules && course.modules.length > 0) {
+      currentModule = course.modules[0];
+      currentLesson = currentModule.lessons && currentModule.lessons.length > 0 ? currentModule.lessons[0] : null;
+    } else {
+      currentModule = course.modules.find((module: any) =>
+        module.lessons.some((lesson: any) => course.currentLesson && lesson.id === course.currentLesson.id)
+      );
+      currentLesson = course.currentLesson;
+    }
     if (currentModule && !expandedModules.includes(currentModule.id)) {
       setExpandedModules((prev) => [...prev, currentModule.id]);
     }
@@ -178,6 +188,53 @@ export default function CourseLearningPage({
   const getYouTubeEmbedUrl = (url: string) => {
     const match = url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/);
     return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+  };
+
+  // Build a flat ordered array of all navigable items (lessons, quizzes, final assessment, certificate)
+  const navigationItems: any[] = [];
+  if (modules.length > 0) {
+    modules.forEach((module: any) => {
+      if (Array.isArray(module.lessons)) {
+        module.lessons.forEach((lesson: any) => navigationItems.push({ ...lesson, type: 'lesson' }));
+      }
+      if (Array.isArray(module.quizzes)) {
+        module.quizzes.forEach((quiz: any) => navigationItems.push({ ...quiz, type: 'quiz' }));
+      }
+    });
+  }
+  if (course?.finalAssessment) {
+    navigationItems.push({ ...course.finalAssessment, type: 'finalAssessment' });
+  }
+  if (course?.hasCertificate) {
+    navigationItems.push({ id: 'certificate', type: 'certificate' });
+  }
+
+  // Find the current item index in the navigation array
+  let currentNavIndex = navigationItems.findIndex(item => {
+    if (item.type === 'lesson' && course?.currentLesson && item.id === course.currentLesson.id) return true;
+    if (item.type === 'quiz' && course?.currentLesson && item.id === course.currentLesson.id) return true;
+    if (item.type === 'finalAssessment' && course?.currentLesson && item.id === course.currentLesson.id) return true;
+    if (item.type === 'certificate' && lessonId === 'certificate') return true;
+    return false;
+  });
+  const previousNavItem = currentNavIndex > 0 ? navigationItems[currentNavIndex - 1] : null;
+  const nextNavItem = currentNavIndex < navigationItems.length - 1 ? navigationItems[currentNavIndex + 1] : null;
+
+  // Helper to get the correct href for each item
+  const getNavHref = (item: any) => {
+    if (item.type === 'lesson') return `/courses/${courseId}/learn/${item.id}`;
+    if (item.type === 'quiz') return `/courses/${courseId}/learn/quiz/${item.id}`;
+    if (item.type === 'finalAssessment') return `/courses/${courseId}/learn/final-assessment`;
+    if (item.type === 'certificate') return `/courses/${courseId}/certificate`;
+    return '#';
+  };
+
+  // Helper to get the label for each item
+  const getNavLabel = (item: any) => {
+    if (item.type === 'quiz') return 'Quiz';
+    if (item.type === 'finalAssessment') return 'Final Assessment';
+    if (item.type === 'certificate') return 'Certificate';
+    return '';
   };
 
   // Always render sidebar and main layout; only lesson content is dynamic
@@ -366,16 +423,16 @@ export default function CourseLearningPage({
               <Card className="mb-6 border-0">
                 <CardContent className="p-0">
                   <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
-                    {loading || error || !course ? (
+                    {loading || error || !course || !course.currentLesson ? (
                       <div className="flex items-center justify-center w-full h-full text-gray-400 text-lg">{error ? error : 'Loading...'}</div>
-                    ) : course.currentLesson.videoUrl.endsWith('.pdf') ? (
+                    ) : course.currentLesson.videoUrl && course.currentLesson.videoUrl.endsWith('.pdf') ? (
                       <iframe
                         src={course.currentLesson.videoUrl}
                         title={course.currentLesson.title}
                         className="w-full h-full"
                         style={{ minHeight: 400 }}
                       />
-                    ) : isYouTubeUrl(course.currentLesson.videoUrl) ? (
+                    ) : course.currentLesson.videoUrl && isYouTubeUrl(course.currentLesson.videoUrl) ? (
                       <iframe
                         src={getYouTubeEmbedUrl(course.currentLesson.videoUrl)}
                         title={course.currentLesson.title}
@@ -383,13 +440,15 @@ export default function CourseLearningPage({
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
-                    ) : (
+                    ) : course.currentLesson.videoUrl ? (
                       <video
                         src={course.currentLesson.videoUrl}
                         controls
                         className="w-full h-full object-cover"
                         poster={course.currentLesson.videoUrl}
                       />
+                    ) : (
+                      <div className="flex items-center justify-center w-full h-full text-gray-400 text-lg">No video available.</div>
                     )}
                   </div>
                 </CardContent>
@@ -424,12 +483,16 @@ export default function CourseLearningPage({
                           </div>
                         </div>
                         <div className="space-y-4">
-                          {course.currentLesson.transcript.map((item: any, index: number) => (
-                            <div key={index} className="flex space-x-4">
-                              <span className="text-sm font-mono text-blue-600 min-w-[3rem]">{item.timestamp}</span>
-                              <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
-                            </div>
-                          ))}
+                          {course.currentLesson && Array.isArray(course.currentLesson.transcript) ? (
+                            course.currentLesson.transcript.map((item: any, index: number) => (
+                              <div key={index} className="flex space-x-4">
+                                <span className="text-sm font-mono text-blue-600 min-w-[3rem]">{item.timestamp}</span>
+                                <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-gray-400">No transcript available.</div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -442,14 +505,18 @@ export default function CourseLearningPage({
                     <Card>
                       <CardContent className="p-6">
                         <div className="space-y-6">
-                          {course.currentLesson.notes.map((note: any, index: number) => (
-                            <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
-                              <h4 className="font-semibold text-gray-900 mb-2 text-left">{note.title}</h4>
-                              <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-                                {note.content}
+                          {course.currentLesson && Array.isArray(course.currentLesson.notes) ? (
+                            course.currentLesson.notes.map((note: any, index: number) => (
+                              <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+                                <h4 className="font-semibold text-gray-900 mb-2 text-left">{note.title}</h4>
+                                <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                                  {note.content}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))
+                          ) : (
+                            <div className="text-gray-400">No notes available.</div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -462,31 +529,35 @@ export default function CourseLearningPage({
                     <Card>
                       <CardContent className="p-6">
                         <div className="space-y-4">
-                          {course.currentLesson.resources.map((resource: any, index: number) => (
-                            <div
-                              key={index}
-                              className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
-                            >
-                              <div className="flex-shrink-0">
-                                {resource.type === "video" && <Play className="h-5 w-5 text-red-600" />}
-                                {resource.type === "article" && <FileText className="h-5 w-5 text-blue-600" />}
-                                {resource.type === "pdf" && <FileText className="h-5 w-5 text-green-600" />}
-                                {resource.type === "website" && <BookOpen className="h-5 w-5 text-purple-600" />}
+                          {course.currentLesson && Array.isArray(course.currentLesson.resources) ? (
+                            course.currentLesson.resources.map((resource: any, index: number) => (
+                              <div
+                                key={index}
+                                className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="flex-shrink-0">
+                                  {resource.type === "video" && <Play className="h-5 w-5 text-red-600" />}
+                                  {resource.type === "article" && <FileText className="h-5 w-5 text-blue-600" />}
+                                  {resource.type === "pdf" && <FileText className="h-5 w-5 text-green-600" />}
+                                  {resource.type === "website" && <BookOpen className="h-5 w-5 text-purple-600" />}
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-gray-900 mb-1 text-left">{resource.name || resource.title}</h4>
+                                  <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
+                                  <a
+                                    href={resource.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                  >
+                                    Open Resource →
+                                  </a>
+                                </div>
                               </div>
-                              <div className="flex-1">
-                                <h4 className="font-medium text-gray-900 mb-1 text-left">{resource.name || resource.title}</h4>
-                                <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
-                                <a
-                                  href={resource.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                                >
-                                  Open Resource →
-                                </a>
-                              </div>
-                            </div>
-                          ))}
+                            ))
+                          ) : (
+                            <div className="text-gray-400">No resources available.</div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -518,6 +589,32 @@ export default function CourseLearningPage({
           </Button>
         )}
       </div>
+      {/* Modal or notification for navigation */}
+      {showNavModal && pendingNav && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] flex flex-col items-center">
+            <div className="mb-4 text-lg font-semibold">
+              {pendingNav.direction === 'next' ? 'Proceed to' : 'Go back to'} {getNavLabel(pendingNav.item)}?
+            </div>
+            <div className="flex space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => { setShowNavModal(false); setPendingNav(null); }}
+              >
+                Cancel
+              </Button>
+              <Link href={getNavHref(pendingNav.item)}>
+                <Button
+                  className={pendingNav.item.type === 'certificate' ? 'bg-blue-600 hover:bg-blue-700 text-white' : ''}
+                  onClick={() => { setShowNavModal(false); setPendingNav(null); }}
+                >
+                  Continue
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

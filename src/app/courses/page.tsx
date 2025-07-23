@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CourseCatalogPage() {
-  const [user, setUser] = useState<{ name?: string; avatar?: string; tagline?: string } | null>(null);
+  const [user, setUser] = useState<{ id?: string; name?: string; avatar?: string; tagline?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [courses, setCourses] = useState<any[]>([]);
@@ -55,7 +55,13 @@ export default function CourseCatalogPage() {
       try {
         setLoading(true);
         setError("");
-        const res = await fetch("http://localhost:3001/courses/catalog");
+        let userId = user?.id;
+        if (!userId) {
+          const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+          const userInfo = decodeJWT(token);
+          userId = userInfo?.id;
+        }
+        const res = await fetch(`http://localhost:3001/courses/catalog/available?userId=${userId}`);
         if (!res.ok) throw new Error("Failed to fetch courses");
         const data = await res.json();
         setCourses(data);
@@ -66,7 +72,7 @@ export default function CourseCatalogPage() {
       }
     }
     fetchCourses();
-  }, []);
+  }, [user]);
 
   // Fetch courses by category
   useEffect(() => {
@@ -76,10 +82,16 @@ export default function CourseCatalogPage() {
       setError("");
       try {
         let url = '';
+        let userId = user?.id;
+        if (!userId) {
+          const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+          const userInfo = decodeJWT(token);
+          userId = userInfo?.id;
+        }
         if (selectedCategory === 'Most Popular') {
-          url = 'http://localhost:3001/courses/search/most-popular';
+          url = `http://localhost:3001/courses/search/most-popular?userId=${userId}`;
         } else {
-          url = `http://localhost:3001/courses/search/by-category?category=${encodeURIComponent(selectedCategory)}`;
+          url = `http://localhost:3001/courses/search/by-category?category=${encodeURIComponent(selectedCategory)}&userId=${userId}`;
         }
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch courses");
@@ -93,7 +105,7 @@ export default function CourseCatalogPage() {
       }
     }
     fetchCoursesByCategory();
-  }, [selectedCategory]);
+  }, [selectedCategory, user]);
 
   // Reset visible courses when category changes
   useEffect(() => {
@@ -109,7 +121,13 @@ export default function CourseCatalogPage() {
         setIsCategoryLoading(true);
         setError("");
         try {
-          const res = await fetch("http://localhost:3001/courses/catalog");
+          let userId = user?.id;
+          if (!userId) {
+            const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+            const userInfo = decodeJWT(token);
+            userId = userInfo?.id;
+          }
+          const res = await fetch(`http://localhost:3001/courses/catalog/available?userId=${userId}`);
           if (!res.ok) throw new Error("Failed to fetch courses");
           const data = await res.json();
           setCourses(data);
@@ -134,7 +152,37 @@ export default function CourseCatalogPage() {
     setIsSearchLoading(true);
     setError("");
     try {
-      const res = await fetch(`http://localhost:3001/courses/search?q=${encodeURIComponent(searchQuery)}`);
+      let userId = user?.id;
+      if (!userId) {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const userInfo = decodeJWT(token);
+        userId = userInfo?.id;
+      }
+      const res = await fetch(`http://localhost:3001/courses/search?q=${encodeURIComponent(searchQuery)}&userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch courses");
+      const data = await res.json();
+      setCourses(data);
+      setVisibleCourses(6);
+    } catch (err: any) {
+      setCourses([]);
+      setError(err.message || "Failed to fetch courses");
+    } finally {
+      setIsSearchLoading(false);
+    }
+  };
+
+  // Add a handler for badge search (if you have a badge filter UI)
+  const handleBadgeSearch = async (badgeName: string) => {
+    setIsSearchLoading(true);
+    setError("");
+    try {
+      let userId = user?.id;
+      if (!userId) {
+        const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+        const userInfo = decodeJWT(token);
+        userId = userInfo?.id;
+      }
+      const res = await fetch(`http://localhost:3001/courses/search/by-badge?badgeName=${encodeURIComponent(badgeName)}&userId=${userId}`);
       if (!res.ok) throw new Error("Failed to fetch courses");
       const data = await res.json();
       setCourses(data);

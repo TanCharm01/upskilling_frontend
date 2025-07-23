@@ -150,7 +150,7 @@ export default function QuizPage() {
                 <div className="mb-4 text-gray-600 text-sm">Completed at: {review.completedAt ? new Date(review.completedAt).toLocaleString() : "-"}</div>
                 <div className="space-y-8">
                   {review.questions.map((q: any, idx: number) => (
-                    <div key={q.id} className="p-6 rounded border border-gray-100 bg-white w-full">
+                    <div key={q.id || idx} className="p-6 rounded border border-gray-100 bg-white w-full">
                       <div className="block font-medium mb-2 text-lg">{idx + 1}. {q.prompt}</div>
                       <div className="mb-2">
                         <span className="font-semibold text-gray-700">Your answer:</span>
@@ -175,7 +175,7 @@ export default function QuizPage() {
               <h1 className="text-2xl font-bold mb-4">Quiz: {quiz.title}</h1>
               <form onSubmit={handleSubmit} className="space-y-10">
                 {quiz.questions.map((q: any, idx: number) => (
-                  <div key={q.id} className="p-6 rounded border border-gray-100 bg-white w-full">
+                  <div key={q.id || idx} className="p-6 rounded border border-gray-100 bg-white w-full">
                     <label className="block font-medium mb-3 text-lg">{idx + 1}. {q.prompt}</label>
                     <textarea
                       className="w-full border border-gray-200 rounded p-4 min-h-[120px] text-base resize-vertical"

@@ -123,15 +123,30 @@ export default function StudentDashboard() {
       <div className="w-80 bg-gray-50 flex flex-col">
         {/* User Profile Section */}
         <div className="p-6 bg-gray-100">
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={user?.avatar || DEFAULT_AVATAR} />
-              <AvatarFallback className="text-lg font-semibold">{user?.name?.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">{user?.name}</h2>
-              <p className="text-sm text-gray-600">{user?.tagline}</p>
+          <div
+            className="flex items-center space-x-2 cursor-pointer group"
+            onClick={() => router.push('/profile')}
+            title="Go to profile"
+          >
+            <div
+              className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center group-hover:ring-2 group-hover:ring-blue-500 transition"
+              style={{ backgroundColor: user?.avatar ? undefined : '#0747A1' }}
+            >
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="User Avatar"
+                  className="h-10 w-10 object-cover"
+                />
+              ) : (
+                <span className="text-white text-lg font-semibold">
+                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </span>
+              )}
             </div>
+            <span className="text-sm font-medium group-hover:text-blue-700">
+              {user?.name || "User"}
+            </span>
           </div>
         </div>
         {/* Navigation Menu (unchanged) */}
@@ -157,15 +172,6 @@ export default function StudentDashboard() {
                 <span className="font-medium">Courses</span>
               </button>
             </Link>
-            <button
-              onClick={() => setActiveNav("profile")}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                activeNav === "profile" ? "bg-white text-gray-900 shadow-sm" : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              <User className="h-5 w-5" />
-              <span className="font-medium">Profile</span>
-            </button>
             <button
               onClick={() => setActiveNav("logout")}
               className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-700 hover:bg-gray-100"
@@ -224,10 +230,10 @@ export default function StudentDashboard() {
                     </div>
                     <CardContent className="p-4 flex flex-col h-full">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">{item.course.title}</h3>
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">{item.course.title}</h3>
                         <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{item.course.level}</span>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{item.course.description}</p>
+                      <p className="text-sm text-gray-700 mb-2 line-clamp-2">{item.course.description}</p>
                       <div className="flex items-center text-xs text-gray-500 mb-3">
                         <span>
                           {Math.round((item.course.duration ?? 0) / 60) > 0
@@ -276,56 +282,63 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {completedCourses.map((course: DashboardCourse) => (
-                  <Card key={course.id} className="overflow-hidden border-green-200 bg-green-50 shadow-md">
-                    <div className="aspect-video bg-gray-200 relative">
-                      <img
-                        src={course.thumbnailUrl && course.thumbnailUrl !== '' ? course.thumbnailUrl : DEFAULT_COURSE_IMAGE}
-                        onError={handleImgError}
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Completed
+                {completedCourses.map((course: any) => {
+                  // Get first lessonId if available
+                  let firstLessonId = '1';
+                  if (course.course?.modules && course.course.modules.length > 0) {
+                    const firstModule = course.course.modules[0];
+                    if (firstModule.lessons && firstModule.lessons.length > 0) {
+                      firstLessonId = firstModule.lessons[0].id;
+                    }
+                  }
+                  return (
+                    <Card key={course.id} className="overflow-hidden shadow-md h-full flex flex-col">
+                      <div className="aspect-video bg-gray-200">
+                        <img
+                          src={course.course?.thumbnailUrl || DEFAULT_COURSE_IMAGE}
+                          onError={handleImgError}
+                          alt={course.course?.title}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">{course.title}</h3>
-                        <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.level}</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{course.description}</p>
-                      <div className="flex items-center text-xs text-gray-500 mb-3">
-                        <span>
-                          {Math.round((course.duration ?? 0) / 60) > 0
-                            ? `${Math.floor((course.duration ?? 0) / 60)}h `
-                            : ''}
-                          {(course.duration ?? 0) % 60}m
-                        </span>
-                      </div>
-                      <div className="mb-3">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                          <span>Completed</span>
+                      <CardContent className="p-4 flex flex-col h-full">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-lg font-bold text-gray-900 mb-1">{course.course?.title}</h3>
+                          <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.course?.level}</span>
                         </div>
-                        <Progress value={100} className="h-2" />
-                      </div>
-                      <div className="flex space-x-2">
-                        <Link href={`/courses/${course.id}/learn/1`} className="flex-1">
-                          <Button variant="outline" className="w-full bg-transparent">
-                            Review
-                          </Button>
-                        </Link>
-                        {course.certificate && (
-                          <Button className="bg-green-600 hover:bg-green-700 flex items-center">
-                            <Award className="h-4 w-4 mr-1" />
-                            Certificate
-                          </Button>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <p className="text-sm text-gray-700 mb-2 line-clamp-2">{course.course?.description}</p>
+                        <div className="flex items-center text-xs text-gray-500 mb-3">
+                          <span>
+                            {Math.round((course.course?.duration ?? 0) / 60) > 0
+                              ? `${Math.floor((course.course?.duration ?? 0) / 60)}h `
+                              : ''}
+                            {(course.course?.duration ?? 0) % 60}m
+                          </span>
+                        </div>
+                        <div className="mb-3">
+                          <div className="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Completed</span>
+                            <span>100%</span>
+                          </div>
+                          <Progress value={100} className="h-2" />
+                        </div>
+                        <div className="flex flex-col gap-2 mt-auto">
+                          <Link href={`/courses/${course.course?.id}/learn/${firstLessonId}`}>
+                            <Button variant="outline" className="w-full bg-transparent">
+                              Review
+                            </Button>
+                          </Link>
+                          <Link href={`/courses/${course.course?.id}/certificate`}>
+                            <Button className="w-full bg-green-600 hover:bg-green-700 flex items-center justify-center">
+                              <Award className="h-4 w-4 mr-1" />
+                              Certificate
+                            </Button>
+                          </Link>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -334,38 +347,42 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Recommended for you</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recommendedCourses.map((course: DashboardCourse) => (
-                <Card key={course.id} className="overflow-hidden shadow-md">
-                  <div className="aspect-video bg-gray-200">
-                    <img
-                      src={course.thumbnailUrl && course.thumbnailUrl !== '' ? course.thumbnailUrl : DEFAULT_COURSE_IMAGE}
-                      onError={handleImgError}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold text-gray-900">{course.title}</h3>
-                      <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.level}</span>
-                      </div>
-                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">{course.description}</p>
-                    <div className="flex items-center text-xs text-gray-500 mb-3">
-                      <span>
-                        {Math.round((course.duration ?? 0) / 60) > 0
-                          ? `${Math.floor((course.duration ?? 0) / 60)}h `
-                          : ''}
-                        {(course.duration ?? 0) % 60}m
-                      </span>
+            {recommendedCourses.length === 0 ? (
+              <div className="text-center text-gray-500 py-12">There are currently no recommendations.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recommendedCourses.map((course: DashboardCourse) => (
+                  <Card key={course.id} className="overflow-hidden shadow-md">
+                    <div className="aspect-video bg-gray-200">
+                      <img
+                        src={course.thumbnailUrl && course.thumbnailUrl !== '' ? course.thumbnailUrl : DEFAULT_COURSE_IMAGE}
+                        onError={handleImgError}
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <Link href={`/courses/${course.id}/enroll`}>
-                      <Button className="w-full bg-[#0747A1] hover:bg-[#05316e]">Enroll</Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-bold text-gray-900 mb-1">{course.title}</h3>
+                        <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.level}</span>
+                      </div>
+                      <p className="text-sm text-gray-700 mb-2 line-clamp-2">{course.description}</p>
+                      <div className="flex items-center text-xs text-gray-500 mb-3">
+                        <span>
+                          {Math.round((course.duration ?? 0) / 60) > 0
+                            ? `${Math.floor((course.duration ?? 0) / 60)}h `
+                            : ''}
+                          {(course.duration ?? 0) % 60}m
+                        </span>
+                      </div>
+                      <Link href={`/courses/${course.id}/enroll`}>
+                        <Button className="w-full bg-[#0747A1] hover:bg-[#05316e]">Enroll</Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {/* Right Sidebar - Stats */}
