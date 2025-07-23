@@ -302,6 +302,18 @@ export default function CourseLearningPage({
                   </Link>
                 </div>
               )}
+              {/* Certificate Link */}
+              {course?.hasCertificate && (
+                <div className="mt-2">
+                  <Link
+                    href={`/courses/${courseId}/certificate`}
+                    className="flex items-center p-3 rounded-lg transition-colors border bg-blue-50 border-blue-200 hover:bg-blue-100"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-700 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                    <span className="font-medium text-sm text-blue-900">Certificate</span>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
