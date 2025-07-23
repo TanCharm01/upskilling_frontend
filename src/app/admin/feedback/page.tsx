@@ -100,7 +100,7 @@ const renderStars = (rating: number) => {
 
 export default function FeedbackManagement() {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-gray-100 ">
       <AdminSidebar />
 
       <main className="flex-1 p-8">

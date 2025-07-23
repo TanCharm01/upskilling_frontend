@@ -31,7 +31,7 @@ const AdminSidebar = () => (
       </Link>
     </nav>
     <div className="mt-auto">
-      <Button variant="outline" className="w-full justify-start text-white hover:bg-blue-600">
+      <Button variant="outline" className="w-full justify-start text-black hover:bg-blue-600">
         <LogOut className="h-5 w-5 mr-3" />
         <span>Logout</span>
       </Button>

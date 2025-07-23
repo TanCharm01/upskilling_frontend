@@ -73,7 +73,7 @@ export default function CoursePreview() {
           </div>
 
           <h1 className="text-4xl font-bold mb-2">{dummyCourseData.title}</h1>
-          <div className="flex items-center text-sm text-muted-foreground mb-6">
+          <div className="flex justify-between text-sm text-muted-foreground mb-6">
             <span>{dummyCourseData.lessonsCount} Lessons</span>
             <span className="mx-2">•</span>
             <span>{dummyCourseData.totalDuration}</span>
@@ -111,7 +111,7 @@ export default function CoursePreview() {
             ))}
           </Accordion>
 
-          <div className="flex justify-center space-x-4 mt-10">
+          <div className="flex justify-between space-x-4 mt-10">
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">Publish Course</Button>
             <Link href="/course-management/new-module">
               <Button variant="outline" className="bg-transparent flex items-center justify-center gap-2">

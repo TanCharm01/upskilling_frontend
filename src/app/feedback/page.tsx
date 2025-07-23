@@ -38,7 +38,7 @@ export default function FeedbackPage() {
             <label htmlFor="enjoyment" className="mb-2 block text-base font-medium text-gray-700">
               2. What did you enjoy most about the course?
             </label>
-            <Textarea id="enjoyment" placeholder="Placeholder" rows={4} />
+            <Textarea id="enjoyment" placeholder="Placeholder" rows={4} className="w-full md:w-[600px]"  />
           </div>
 
           {/* Question 3: Improvement */}
@@ -46,7 +46,7 @@ export default function FeedbackPage() {
             <label htmlFor="improvement" className="mb-2 block text-base font-medium text-gray-700">
               3. Is there anything you think could be improved?
             </label>
-            <Textarea id="improvement" placeholder="Placeholder" rows={4} />
+            <Textarea id="improvement" placeholder="Placeholder" rows={4} className="w-full md:w-[600px]"  />
           </div>
 
           {/* Question 4: Usefulness */}
@@ -141,7 +141,7 @@ export default function FeedbackPage() {
             <label htmlFor="comment" className="mb-2 block text-base font-medium text-gray-700">
               7. Leave a comment or testimonial we can share with others
             </label>
-            <Textarea id="comment" placeholder="Placeholder" rows={4} />
+            <Textarea id="comment" placeholder="Placeholder" rows={4} className="w-full md:w-[600px]"  />
           </div>
 
           {/* Submit Button */}

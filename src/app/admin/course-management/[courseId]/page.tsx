@@ -114,9 +114,8 @@ export default function CourseViewPage({ params }: { params: { courseId: string 
           </div>
 
           <h2 className="text-4xl font-bold mb-2">{course.title}</h2>
-          <div className="flex items-center text-sm text-muted-foreground mb-6">
+          <div className="flex justify-between text-sm text-muted-foreground mb-6">
             <span>{course.lessonsCount} Lessons</span>
-            <span className="mx-2">•</span>
             <span>{course.totalDuration}</span>
           </div>
 
@@ -151,7 +150,7 @@ export default function CourseViewPage({ params }: { params: { courseId: string 
             ))}
           </Accordion>
 
-          <div className="flex justify-center space-x-4 mt-10">
+          <div className="flex justify-between space-x-4 mt-10">
             <Button className="bg-blue-600 hover:bg-blue-700 text-white">Unpublish Course</Button>
             <Link href={`/course-management/new-module?courseId=${course.id}`}>
               {" "}
