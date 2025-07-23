@@ -24,9 +24,11 @@ import {
   ChevronUp,
   PlayCircle,
   Lock,
+  GraduationCap,
 } from "lucide-react"
 import Link from "next/link"
 import { decodeJWT } from "@/lib/utils"
+import { useParams } from "next/navigation";
 
 const getLessonIcon = (type: string, completed: boolean, current: boolean, locked = false) => {
   if (locked) {
@@ -65,46 +67,43 @@ export default function CourseLearningPage({
   const [error, setError] = useState("")
   const [userId, setUserId] = useState<string | null>(null)
 
-  useEffect(() => {
-    async function fetchUserAndCourse() {
-      setLoading(true)
-      setError("")
-      
-      try {
-        // Get user ID from JWT token
-        if (typeof window === "undefined") return
-        const token = localStorage.getItem("token")
-        if (!token) {
-          setError("No token found. Please login.")
-          setLoading(false)
-          return
-        }
-        
-        const userInfo = decodeJWT(token)
-        const currentUserId = userInfo?.id
-        if (!currentUserId) {
-          setError("Could not get user ID from token.")
-          setLoading(false)
-          return
-        }
-        setUserId(currentUserId)
-
-        // Fetch course content with user ID and current lesson ID
-        const res = await fetch(
-          `http://localhost:3001/courses/${courseId}/content?userId=${currentUserId}&currentLessonId=${lessonId}`
-        )
-        if (!res.ok) throw new Error("Failed to fetch course content")
-        const data = await res.json()
-        setCourse(data)
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch course content")
-      } finally {
+  async function fetchUserAndCourse() {
+    setLoading(true)
+    setError("")
+    try {
+      // Get user ID from JWT token
+      if (typeof window === "undefined") return
+      const token = localStorage.getItem("token")
+      if (!token) {
+        setError("No token found. Please login.")
         setLoading(false)
+        return
       }
+      const userInfo = decodeJWT(token)
+      const currentUserId = userInfo?.id
+      if (!currentUserId) {
+        setError("Could not get user ID from token.")
+        setLoading(false)
+        return
+      }
+      setUserId(currentUserId)
+      // Fetch course content with user ID and current lesson ID
+      const res = await fetch(
+        `http://localhost:3001/courses/${courseId}/content?userId=${currentUserId}&currentLessonId=${lessonId}`
+      )
+      if (!res.ok) throw new Error("Failed to fetch course content")
+      const data = await res.json()
+      setCourse(data)
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch course content")
+    } finally {
+      setLoading(false)
     }
-    
-    fetchUserAndCourse()
-  }, [courseId, lessonId])
+  }
+
+  useEffect(() => {
+    fetchUserAndCourse();
+  }, [courseId, lessonId]);
 
   // Track lesson access on page load
   useEffect(() => {
@@ -138,7 +137,9 @@ export default function CourseLearningPage({
         isCompleted: true
       })
     });
-    // Optionally, refetch course content to update UI
+    // Refetch course content to update UI
+    await fetchUserAndCourse();
+    setMarkingComplete(false);
   }
 
   // Ensure the current module is always open in the collapsible sidebar
@@ -258,10 +259,49 @@ export default function CourseLearningPage({
                           </div>
                         </Link>
                       ))}
+                      {/* Module Quizzes */}
+                      {Array.isArray(module.quizzes) && module.quizzes.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {module.quizzes.map((quiz: any, quizIndex: number) => (
+                            <Link
+                              key={quiz.id}
+                              href={`/courses/${courseId}/learn/quiz/${quiz.id}${quiz.completed ? '/review' : ''}`}
+                              className={`flex items-center p-2 rounded-md transition-colors hover:bg-yellow-50 border border-yellow-100 ${quiz.completed ? 'bg-green-50 border-green-200' : ''}`}
+                            >
+                              <div className="mr-3 flex items-center">
+                                {quiz.completed ? (
+                                  <CheckCircle className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <Trophy className="h-4 w-4 text-yellow-500" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <h5 className={`font-medium text-xs ${quiz.completed ? 'text-green-900' : 'text-yellow-900'}`}>Quiz: {quiz.title}</h5>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               ))}
+              {/* Final Assessment */}
+              {course?.finalAssessment && (
+                <div className="mt-6">
+                  <Link
+                    href={`/courses/${courseId}/learn/final-assessment${course.finalAssessmentCompleted ? '/review' : ''}`}
+                    className={`flex items-center p-3 rounded-lg transition-colors mt-2 border ${course.finalAssessmentCompleted ? 'bg-green-50 border-green-200' : 'bg-purple-50 border-purple-200 hover:bg-purple-100'}`}
+                  >
+                    {course.finalAssessmentCompleted ? (
+                      <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
+                    ) : (
+                      <GraduationCap className="h-5 w-5 text-purple-700 mr-3" />
+                    )}
+                    <span className={`font-medium text-sm ${course.finalAssessmentCompleted ? 'text-green-900' : 'text-purple-900'}`}>Final Assessment: {course.finalAssessment.title}</span>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
