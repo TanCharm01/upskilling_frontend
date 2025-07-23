@@ -173,7 +173,12 @@ export default function StudentDashboard() {
               </button>
             </Link>
             <button
-              onClick={() => setActiveNav("logout")}
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  localStorage.removeItem("token");
+                  window.location.href = "http://localhost:3000/";
+                }
+              }}
               className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-700 hover:bg-gray-100"
             >
               <LogOut className="h-5 w-5" />
