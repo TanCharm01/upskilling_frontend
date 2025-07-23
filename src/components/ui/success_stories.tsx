@@ -1,8 +1,11 @@
 import TestimonialCard from "@/components/ui/testimonial_cards"
 import { Button } from "@/components/ui/button"
+import { FC } from "react"
 
-export default function StudentSuccessStories() {
-  const testimonials = [
+type Props = { onGetStarted?: () => void; feedback?: any[] }
+
+const StudentSuccessStories: FC<Props> = ({ onGetStarted, feedback }) => {
+  const defaultTestimonials = [
     {
       id: "1",
       name: "Marcus John",
@@ -31,6 +34,7 @@ export default function StudentSuccessStories() {
       imageSrc: "/placeholder.svg?height=64&width=64",
     },
   ]
+  const testimonials = feedback && feedback.length > 0 ? feedback : defaultTestimonials;
 
   return (
     <section className="w-full  bg-white  mt-20">
@@ -56,11 +60,16 @@ export default function StudentSuccessStories() {
           one-year program. Whether you're refining your communication, boosting your tech skills, or preparing for
           real-world challenges, this space is here to support your next step.
         </p>
-        <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs">
-                Get Started &gt;&gt;
+        <Button
+          className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs"
+          onClick={onGetStarted}
+        >
+          Get Started &gt;&gt;
         </Button>
       </div>
 
     </section>
   )
 }
+
+export default StudentSuccessStories

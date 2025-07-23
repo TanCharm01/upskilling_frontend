@@ -1,10 +1,48 @@
+"use client"
 import Link from "next/link"
+import { useState, useEffect } from "react"
+import AuthModal from "@/components/ui/AuthModal"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import BrowseCourses from "@/components/ui/browse_courses" // Import the new component
 import StudentSuccessStories from "@/components/ui/success_stories"
 
 export default function LandingPage() {
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [courseStats, setCourseStats] = useState<any>(null);
+  const [browseCourses, setBrowseCourses] = useState<any[]>([]);
+  const [feedback, setFeedback] = useState<any[]>([]);
+
+  useEffect(() => {
+    setLoading(true);
+    setError("");
+    fetch("http://localhost:3001/home")
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to fetch home data");
+        const data = await res.json();
+        setCourseStats({
+          numberOfCourses: data.numberOfCourses,
+          numberOfCategories: data.numberOfCategories,
+          numberOfStudents: data.numberOfStudents,
+        });
+        setBrowseCourses(data.courses || []);
+        // Transform feedback to testimonial format
+        setFeedback(
+          (data.feedback || []).map((fb: any) => ({
+            id: fb.id,
+            name: fb.user ? `${fb.user.firstname} ${fb.user.lastname}` : "Anonymous",
+            course: fb.course?.title || "",
+            quote: fb.testimonial || fb.comment || "",
+            rating: fb.rating || 5,
+            imageSrc: fb.user?.avatarUrl || "/placeholder.svg",
+          }))
+        );
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
@@ -24,16 +62,18 @@ export default function LandingPage() {
             </Link>
           </nav>
           <div className="flex space-x-4 mt-4 md:mt-0">
-            <Link href="/auth">
-              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md">
-                Login
-              </Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md">
-                Sign Up
-              </Button>
-            </Link>
+            <Button
+              className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md"
+              onClick={() => setAuthModalMode('login')}
+            >
+              Login
+            </Button>
+            <Button
+              className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md"
+              onClick={() => setAuthModalMode('signup')}
+            >
+              Sign Up
+            </Button>
           </div>
         </header>
 
@@ -48,28 +88,33 @@ export default function LandingPage() {
               Enhance your employability with our upskilling courses.
             </p>
             <div className="flex flex-col sm:flex-row justify-center md:justify-start space-y-4 sm:space-y-0 sm:space-x-4 w-full">
-              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs">
-                Know More &gt;&gt;
-              </Button>
-              <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs">
+              <a href="#success-stories" className="w-full sm:w-auto">
+                <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs w-full">
+                  Know More &gt;&gt;
+                </Button>
+              </a>
+              <Button
+                className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs"
+                onClick={() => setAuthModalMode('login')}
+              >
                 Get Started &gt;&gt;
               </Button>
             </div>
 
-            {/* Statistics */}
+            {/* Statistics (dynamic from API) */}
             <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start space-y-6 sm:space-y-0 sm:space-x-8 pt-8 w-full">
               <div className="flex flex-col items-start">
-                <span className="text-4xl font-bold">1100+</span>
+                <span className="text-4xl font-bold">{courseStats ? courseStats.numberOfStudents : '--'}</span>
                 <span className="text-gray-600">Active Students</span>
               </div>
               <div className="h-16 w-1 bg-black hidden sm:block" /> {/* Vertical divider */}
               <div className="flex flex-col items-start">
-                <span className="text-4xl font-bold">100+</span>
+                <span className="text-4xl font-bold">{courseStats ? courseStats.numberOfCourses : '--'}</span>
                 <span className="text-gray-600">Courses</span>
               </div>
               <div className="h-16 w-1  bg-black hidden sm:block" /> {/* Vertical divider */}
               <div className="flex flex-col items-start">
-                <span className="text-4xl font-bold">10+</span>
+                <span className="text-4xl font-bold">{courseStats ? courseStats.numberOfCategories : '--'}</span>
                 <span className="text-gray-600">Course Categories</span>
               </div>
             </div>
@@ -78,7 +123,7 @@ export default function LandingPage() {
           {/* Right Image Placeholder (with frame) */}
           <div className="p-8 h-[400px] w-full md:w-[400px] flex items-center justify-center overflow-hidden rounded-lg mx-auto">
             <Image
-              src="/hero_image.avif"
+              src="/hero_img.png"
               alt="Placeholder for student image"
               width={500}
               height={600}
@@ -87,10 +132,27 @@ export default function LandingPage() {
           </div>
         </main>
 
-      {/* Browse Courses Section */}
-      <BrowseCourses />
-      {/* Student Success Stories Section */}
-      <StudentSuccessStories />
+      {/* Loading/Error State */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20 text-gray-500">Loading...</div>
+      ) : error ? (
+        <div className="flex items-center justify-center py-20 text-red-500">{error}</div>
+      ) : (
+        <>
+          {/* Browse Courses Section */}
+          <BrowseCourses courses={browseCourses} stats={courseStats} onRequireLogin={() => setAuthModalMode('login')} />
+          {/* Student Success Stories Section */}
+          <div id="success-stories">
+            <StudentSuccessStories onGetStarted={() => setAuthModalMode('login')} feedback={feedback} />
+          </div>
+        </>
+      )}
+      {authModalMode && (
+        <AuthModal
+          onClose={() => setAuthModalMode(null)}
+          initialMode={authModalMode}
+        />
+      )}
       </div>
     </div>
   )

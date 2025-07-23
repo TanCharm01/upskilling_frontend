@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Chrome, Apple, Facebook } from "lucide-react"
+import { Chrome, Apple, Facebook, ChevronLeft } from "lucide-react"
 
 export default function Component() {
   const [email, setEmail] = useState("")
@@ -55,7 +55,13 @@ export default function Component() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-950 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-950 p-4 flex-col">
+      <div className="flex justify-center mb-8 mt-4 w-full">
+        <Link href="/" className="flex items-center text-gray-600 hover:text-blue-700 text-sm font-medium bg-transparent px-2 py-1 rounded transition-colors">
+          <ChevronLeft className="h-5 w-5 mr-1" />
+          Back to Homepage
+        </Link>
+      </div>
       <Card className="w-full max-w-md rounded-xl shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Sign in to your account</CardTitle>

@@ -155,7 +155,7 @@ export default function CourseLearningPage({
     } else {
       currentModule = course.modules.find((module: any) =>
         module.lessons.some((lesson: any) => course.currentLesson && lesson.id === course.currentLesson.id)
-      );
+    );
       currentLesson = course.currentLesson;
     }
     if (currentModule && !expandedModules.includes(currentModule.id)) {
@@ -485,10 +485,10 @@ export default function CourseLearningPage({
                         <div className="space-y-4">
                           {course.currentLesson && Array.isArray(course.currentLesson.transcript) ? (
                             course.currentLesson.transcript.map((item: any, index: number) => (
-                              <div key={index} className="flex space-x-4">
-                                <span className="text-sm font-mono text-blue-600 min-w-[3rem]">{item.timestamp}</span>
-                                <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
-                              </div>
+                            <div key={index} className="flex space-x-4">
+                              <span className="text-sm font-mono text-blue-600 min-w-[3rem]">{item.timestamp}</span>
+                              <p className="text-sm text-gray-700 leading-relaxed">{item.text}</p>
+                            </div>
                             ))
                           ) : (
                             <div className="text-gray-400">No transcript available.</div>
@@ -507,12 +507,12 @@ export default function CourseLearningPage({
                         <div className="space-y-6">
                           {course.currentLesson && Array.isArray(course.currentLesson.notes) ? (
                             course.currentLesson.notes.map((note: any, index: number) => (
-                              <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
-                                <h4 className="font-semibold text-gray-900 mb-2 text-left">{note.title}</h4>
-                                <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
-                                  {note.content}
-                                </div>
+                            <div key={index} className="border-b border-gray-100 pb-4 last:border-b-0">
+                              <h4 className="font-semibold text-gray-900 mb-2 text-left">{note.title}</h4>
+                              <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                                {note.content}
                               </div>
+                            </div>
                             ))
                           ) : (
                             <div className="text-gray-400">No notes available.</div>
@@ -531,29 +531,29 @@ export default function CourseLearningPage({
                         <div className="space-y-4">
                           {course.currentLesson && Array.isArray(course.currentLesson.resources) ? (
                             course.currentLesson.resources.map((resource: any, index: number) => (
-                              <div
-                                key={index}
-                                className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
-                              >
-                                <div className="flex-shrink-0">
-                                  {resource.type === "video" && <Play className="h-5 w-5 text-red-600" />}
-                                  {resource.type === "article" && <FileText className="h-5 w-5 text-blue-600" />}
-                                  {resource.type === "pdf" && <FileText className="h-5 w-5 text-green-600" />}
-                                  {resource.type === "website" && <BookOpen className="h-5 w-5 text-purple-600" />}
-                                </div>
-                                <div className="flex-1">
-                                  <h4 className="font-medium text-gray-900 mb-1 text-left">{resource.name || resource.title}</h4>
-                                  <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
-                                  <a
-                                    href={resource.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                                  >
-                                    Open Resource →
-                                  </a>
-                                </div>
+                            <div
+                              key={index}
+                              className="flex items-start space-x-4 p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex-shrink-0">
+                                {resource.type === "video" && <Play className="h-5 w-5 text-red-600" />}
+                                {resource.type === "article" && <FileText className="h-5 w-5 text-blue-600" />}
+                                {resource.type === "pdf" && <FileText className="h-5 w-5 text-green-600" />}
+                                {resource.type === "website" && <BookOpen className="h-5 w-5 text-purple-600" />}
                               </div>
+                              <div className="flex-1">
+                                <h4 className="font-medium text-gray-900 mb-1 text-left">{resource.name || resource.title}</h4>
+                                <p className="text-sm text-gray-600 mb-2">{resource.description}</p>
+                                <a
+                                  href={resource.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                                >
+                                  Open Resource →
+                                </a>
+                              </div>
+                            </div>
                             ))
                           ) : (
                             <div className="text-gray-400">No resources available.</div>
