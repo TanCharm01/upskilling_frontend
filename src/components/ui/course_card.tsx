@@ -1,7 +1,8 @@
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
+import { decodeJWT } from "@/lib/utils"
 
 interface CourseCardProps {
   id: string;
@@ -12,20 +13,56 @@ interface CourseCardProps {
   description?: string;
   progress?: number; // New optional prop for dashboard cards
   onRequireLogin?: () => void;
+  alreadyEnrolledMessage?: string;
 }
 
-export default function CourseCard({ id, title, totalLessons, duration, description, thumbnailUrl, progress, onRequireLogin }: CourseCardProps) {
+export default function CourseCard({ id, title, totalLessons, duration, description, thumbnailUrl, progress, onRequireLogin, alreadyEnrolledMessage }: CourseCardProps) {
   const router = useRouter();
-  const handleEnrol = useCallback(() => {
+  const [enrolling, setEnrolling] = useState(false);
+  const [enrollMessage, setEnrollMessage] = useState<string | null>(null);
+  const handleEnrol = useCallback(async () => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
       if (!token) {
         if (onRequireLogin) onRequireLogin();
         return;
       }
-      router.push(`/courses/${id}/content`);
+      const userInfo = decodeJWT(token);
+      if (!userInfo?.id) {
+        setEnrollMessage('User not found. Please log in again.');
+        return;
+      }
+      setEnrollMessage(null);
+      setEnrolling(true);
+      try {
+        const res = await fetch('http://localhost:3001/enrollments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ userId: userInfo.id, courseId: id }),
+        });
+        if (res.status === 409) {
+          setEnrollMessage(alreadyEnrolledMessage || 'You are already enrolled in this course.');
+          setEnrolling(false);
+          setTimeout(() => {
+            setEnrollMessage(null);
+          }, 2000);
+          return;
+        }
+        if (!res.ok) throw new Error('Failed to enroll in course');
+        setEnrollMessage('Successfully enrolled! Redirecting...');
+        setTimeout(() => {
+          router.push(`/courses/${id}/enroll`);
+        }, 1200);
+      } catch (err: any) {
+        setEnrollMessage(err.message || 'Failed to enroll in course');
+      } finally {
+        setEnrolling(false);
+      }
     }
-  }, [id, onRequireLogin, router]);
+  }, [id, onRequireLogin, router, alreadyEnrolledMessage]);
   return (
     <div className="flex flex-col rounded-lg border bg-white text-card-foreground shadow-sm overflow-hidden min-h-[400px]">
       <div className="w-full h-[170px] bg-gray-200 rounded-t-lg overflow-hidden">
@@ -62,7 +99,12 @@ export default function CourseCard({ id, title, totalLessons, duration, descript
               <span>{duration} mins</span>
             </div>
             <p className="text-gray-700 text-sm mb-4 flex-grow">{description}</p>
-            <Button className="w-full bg-uncommonBlue hover:bg-uncommonBlue-dark text-white" onClick={handleEnrol}>Enrol</Button>
+            <Button className="w-full bg-uncommonBlue hover:bg-uncommonBlue-dark text-white" onClick={handleEnrol} disabled={enrolling}>
+              {enrolling ? 'Enrolling...' : 'Enrol'}
+            </Button>
+            {enrollMessage && (
+              <div className={`mt-2 text-xs ${enrollMessage.includes('Success') ? 'text-green-600' : 'text-red-600'}`}>{enrollMessage}</div>
+            )}
           </>
         )}
       </div>

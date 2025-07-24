@@ -123,6 +123,10 @@ export default function CourseContentPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, courseId: course.id }),
       });
+      if (res.status === 409) {
+        setEnrollMessage('You are already enrolled in this course.');
+        return;
+      }
       if (!res.ok) throw new Error('Failed to enroll in course');
       setEnrollMessage('Successfully enrolled! Redirecting...');
       setTimeout(() => {

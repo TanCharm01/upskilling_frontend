@@ -25,6 +25,7 @@ import {
   PlayCircle,
   Lock,
   GraduationCap,
+  MessageCircle,
 } from "lucide-react"
 import Link from "next/link"
 import { decodeJWT } from "@/lib/utils"
@@ -359,6 +360,16 @@ export default function CourseLearningPage({
                   </Link>
                 </div>
               )}
+              {/* Feedback */}
+              <div className="mt-2">
+                <Link
+                  href={`/courses/${courseId}/feedback`}
+                  className="flex items-center p-3 rounded-lg transition-colors mt-2 border bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
+                >
+                  <MessageCircle className="h-5 w-5 text-yellow-700 mr-3" />
+                  <span className="font-medium text-sm text-yellow-900">Feedback</span>
+                </Link>
+              </div>
               {/* Certificate Link */}
               {course?.hasCertificate && (
                 <div className="mt-2">

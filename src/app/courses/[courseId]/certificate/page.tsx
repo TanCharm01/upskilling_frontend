@@ -7,6 +7,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { decodeJWT } from '@/lib/utils';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import FeedbackFormModal from '@/components/ui/FeedbackFormModal';
 
 export default function CourseCertificatePage() {
   const params = useParams();
@@ -16,6 +18,10 @@ export default function CourseCertificatePage() {
   const [user, setUser] = useState<any>(null);
   const [courseName, setCourseName] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState<boolean | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [checkingFeedback, setCheckingFeedback] = useState(true);
 
   useEffect(() => {
     // Get user info from JWT
@@ -50,6 +56,22 @@ export default function CourseCertificatePage() {
         setCourseName('');
       });
   }, [params.courseId]);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const userInfo = decodeJWT(token);
+    if (userInfo?.id && courseName) {
+      setUserId(userInfo.id);
+      setCheckingFeedback(true);
+      fetch(`http://localhost:3001/feedback/user/${userInfo.id}/course/${params.courseId}`)
+        .then(res => res.json())
+        .then(data => {
+          setFeedbackSubmitted(!!data);
+        })
+        .catch(() => setFeedbackSubmitted(false))
+        .finally(() => setCheckingFeedback(false));
+    }
+  }, [courseName]);
 
   // Handler to generate certificate
   const handleGenerateCertificate = async () => {
@@ -107,7 +129,17 @@ export default function CourseCertificatePage() {
               </Button>
             </a>
           ) : (
-            <Button className="mt-2 w-full flex items-center justify-center gap-2" onClick={handleGenerateCertificate} disabled={generating}>
+            <Button
+              className="mt-2 w-full flex items-center justify-center gap-2"
+              onClick={() => {
+                if (feedbackSubmitted === false) {
+                  setShowFeedbackModal(true);
+                  return;
+                }
+                handleGenerateCertificate();
+              }}
+              disabled={generating || checkingFeedback}
+            >
               {generating ? (
                 <>
                   <svg className="animate-spin h-5 w-5 mr-2 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
@@ -117,6 +149,18 @@ export default function CourseCertificatePage() {
                 <>Generate Certificate</>
               )}
             </Button>
+          )}
+          {showFeedbackModal && (
+            <FeedbackFormModal
+              open={showFeedbackModal}
+              onClose={() => setShowFeedbackModal(false)}
+              courseId={String(params.courseId)}
+              userId={userId}
+              onFeedbackSubmitted={() => {
+                setShowFeedbackModal(false);
+                setFeedbackSubmitted(true);
+              }}
+            />
           )}
         </CardContent>
       </Card>
