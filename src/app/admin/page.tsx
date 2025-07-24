@@ -30,11 +30,18 @@ export default function AdminAuthPage() {
     setLoading(true);
     setError('');
     setSuccess('');
+    const email = form.email.trim();
+    const password = form.password.trim();
+    if (!email || !password) {
+      setError('Please enter both email and password (no leading/trailing spaces).');
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch('http://localhost:3001/admin/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, password: form.password })
+        body: JSON.stringify({ email, password })
       });
       const data = await res.json();
       if (res.ok && data.access_token) {
@@ -60,15 +67,24 @@ export default function AdminAuthPage() {
     setLoading(true);
     setError('');
     setSuccess('');
+    const email = form.email.trim();
+    const password = form.password.trim();
+    const firstname = form.firstname.trim();
+    const lastname = form.lastname.trim();
+    if (!email || !password || !firstname || !lastname) {
+      setError('Please fill all fields (no leading/trailing spaces).');
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch('http://localhost:3001/admin/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-          firstname: form.firstname,
-          lastname: form.lastname,
+          email,
+          password,
+          firstname,
+          lastname,
         })
       });
       const data = await res.json();

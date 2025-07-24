@@ -15,11 +15,11 @@ export default function TestimonialCard({ name, course, quote, rating, avatar }:
       <div className="flex items-center mb-4">
         <div className="relative w-16 h-16 rounded-full overflow-hidden mr-10 flex items-center justify-center bg-amber-700">
           {avatar ? (
-            <Image
+          <Image
               src={avatar}
-              alt={`Profile picture of ${name}`}
-              layout="fill"
-              objectFit="cover"
+            alt={`Profile picture of ${name}`}
+            layout="fill"
+            objectFit="cover"
               className="rounded-full"
             />
           ) : (

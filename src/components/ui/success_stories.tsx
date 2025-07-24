@@ -64,7 +64,7 @@ const StudentSuccessStories: FC<Props> = ({ onGetStarted, feedback }) => {
           className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs"
           onClick={onGetStarted}
         >
-          Get Started &gt;&gt;
+                Get Started &gt;&gt;
         </Button>
       </div>
 

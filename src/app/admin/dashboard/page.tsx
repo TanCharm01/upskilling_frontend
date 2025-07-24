@@ -50,29 +50,52 @@ function DashboardCard({ title, value, change, icon: Icon }: DashboardCardProps)
 
 type RecentActivityItemProps = {
   name: string;
+  avatar?: string;
   type: string;
   time: string;
+  role?: string;
 };
 
 // Custom component for Recent Activity Items
-function RecentActivityItem({ name, type, time }: RecentActivityItemProps) {
+function RecentActivityItem({ name, avatar, type, time, role }: RecentActivityItemProps) {
   const typeColor = type === "signup" ? "bg-purple-100 text-purple-800" : "bg-orange-100 text-orange-800"
+  // Format time as "time ago"
+  const getTimeAgo = (timestamp: string) => {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diff < 60) return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return date.toLocaleDateString();
+  };
   return (
     <div className="flex items-center justify-between py-3">
       <div className="flex items-center space-x-3">
         <Avatar className="h-9 w-9">
-          <AvatarFallback>
-            {name
-              .split(" ")
-              .map((n: string) => n[0])
-              .join("")}
-          </AvatarFallback>
+          {avatar ? (
+            <img src={avatar} alt={name} className="h-9 w-9 rounded-full object-cover" />
+          ) : (
+            <AvatarFallback>
+              {name
+                .split(" ")
+                .map((n: string) => n[0])
+                .join("")}
+            </AvatarFallback>
+          )}
         </Avatar>
         <div>
-          <div className="font-medium">{name}</div>
+          <div className="font-medium">
+            {name}
+            {role && (
+              <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${role === 'admin' || role === 'super_admin' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'}`}>
+                {role === 'super_admin' ? 'Super Admin' : role.charAt(0).toUpperCase() + role.slice(1)}
+              </span>
+            )}
+          </div>
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <Badge className={`{typeColor} px-2 py-0.5 rounded-full text-xs font-normal`}>{type}</Badge>
-            <span>{time}</span>
+            <Badge className={`${typeColor} px-2 py-0.5 rounded-full text-xs font-normal`}>{type}</Badge>
+            <span>{getTimeAgo(time)}</span>
           </div>
         </div>
       </div>
@@ -85,6 +108,9 @@ export default function Dashboard() {
   const [admin, setAdmin] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [stats, setStats] = useState<any[]>([]);
+  const [activityLogs, setActivityLogs] = useState<any[]>([]);
+  const [visibleActivities, setVisibleActivities] = useState<number>(5);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
@@ -94,17 +120,35 @@ export default function Dashboard() {
       setLoading(false);
       return;
     }
-    fetch(`http://localhost:3001/admins/profile/${adminInfo.id}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch admin profile.');
-        return res.json();
+    Promise.all([
+      fetch(`http://localhost:3001/admins/profile/${adminInfo.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-      .then(data => {
-        setAdmin(data);
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch admin profile.');
+          return res.json();
+        }),
+      fetch('http://localhost:3001/admins/dashboard-stats', {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
-      .catch(() => setError('Failed to fetch admin profile.'))
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch dashboard stats.');
+          return res.json();
+        }),
+      fetch('http://localhost:3001/activity-logs/recent', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch activity logs.');
+          return res.json();
+        })
+    ])
+      .then(([adminData, statsData, activityData]) => {
+        setAdmin(adminData);
+        setStats(statsData);
+        setActivityLogs(activityData);
+      })
+      .catch(() => setError('Failed to fetch admin profile, stats, or activity logs.'))
       .finally(() => setLoading(false));
   }, []);
 
@@ -157,42 +201,23 @@ export default function Dashboard() {
         </section>
 
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <DashboardCard
-            title="Total Users"
-            value="600"
-            change="+12% from last months"
-            icon={Users}
-          />
-          <DashboardCard
-            title="New signups"
-            value="200"
-            change="+12% from last months"
-            icon={Plus}
-          />
-          <DashboardCard
-            title="Certificates issued"
-            value="150"
-            change="No change from last months"
-            icon={FileText}
-          />
-          <DashboardCard
-            title="Total Courses"
-            value="31"
-            change="-7% from last months"
-            icon={GraduationCap}
-          />
-          <DashboardCard
-            title="Courses enrolled"
-            value="27"
-            change="+12% from last months"
-            icon={CheckCircle}
-          />
-          <DashboardCard
-            title="Average course completion rate"
-            value="70%"
-            change="+12% from last months"
-            icon={TrendingUp}
-          />
+          {stats.map((stat: any, idx: number) => {
+            let icon = Users;
+            if (stat.title.toLowerCase().includes('signup')) icon = Plus;
+            else if (stat.title.toLowerCase().includes('certificate')) icon = FileText;
+            else if (stat.title.toLowerCase().includes('course') && stat.title.toLowerCase().includes('completion')) icon = TrendingUp;
+            else if (stat.title.toLowerCase().includes('course')) icon = GraduationCap;
+            else if (stat.title.toLowerCase().includes('enroll')) icon = CheckCircle;
+            return (
+              <DashboardCard
+                key={stat.title}
+                title={stat.title}
+                value={stat.value}
+                change={stat.change}
+                icon={icon}
+              />
+            );
+          })}
         </section>
 
         <section>
@@ -202,17 +227,27 @@ export default function Dashboard() {
               <p className="text-sm text-muted-foreground">Latest platform activities and user interactions</p>
             </CardHeader>
             <CardContent className="space-y-2">
-              <RecentActivityItem name="Daisy Tsenesa" type="signup" time="2 minutes ago" />
-              <Separator />
-              <RecentActivityItem name="Daisy Tsenesa" type="completion" time="2 minutes ago" />
-              <Separator />
-              <RecentActivityItem name="Daisy Tsenesa" type="signup" time="2 minutes ago" />
+              {activityLogs.slice(0, visibleActivities).map((log: any, idx: number) => (
+                <div key={idx}>
+                  <RecentActivityItem name={log.name} avatar={log.avatar} type={log.type} time={log.time} role={log.role} />
+                  {idx < Math.min(visibleActivities, activityLogs.length) - 1 && <Separator />}
+                </div>
+              ))}
             </CardContent>
-            <div className="p-6 pt-0 flex justify-center">
-              <Button variant="outline" className="w-full max-w-xs bg-transparent">
-                View All
-              </Button>
-            </div>
+            {activityLogs.length > visibleActivities && (
+              <div className="p-6 pt-0 flex justify-center">
+                <Button variant="outline" className="w-full max-w-xs bg-transparent" onClick={() => setVisibleActivities(v => v + 5)}>
+                  View more
+                </Button>
+              </div>
+            )}
+            {visibleActivities > 5 && (
+              <div className="p-6 pt-0 flex justify-center">
+                <Button variant="outline" className="w-full max-w-xs bg-transparent" onClick={() => setVisibleActivities(v => Math.max(5, v - 5))}>
+                  View less
+                </Button>
+              </div>
+            )}
           </Card>
         </section>
       </main>

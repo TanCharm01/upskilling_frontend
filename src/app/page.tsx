@@ -192,14 +192,14 @@ export default function LandingPage() {
                     className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md"
                     onClick={() => setAuthModalMode('login')}
                   >
-                    Login
-                  </Button>
+              Login
+            </Button>
                   <Button
                     className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md"
                     onClick={() => setAuthModalMode('signup')}
                   >
-                    Sign Up
-                  </Button>
+              Sign Up
+            </Button>
                 </>
               )
             )}
@@ -219,8 +219,8 @@ export default function LandingPage() {
             <div className="flex flex-col sm:flex-row justify-center md:justify-start space-y-4 sm:space-y-0 sm:space-x-4 w-full">
               <a href="#success-stories" className="w-full sm:w-auto">
                 <Button className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs w-full">
-                  Know More &gt;&gt;
-                </Button>
+                Know More &gt;&gt;
+              </Button>
               </a>
               <Button
                 className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs"
@@ -274,9 +274,9 @@ export default function LandingPage() {
         <div className="flex items-center justify-center py-20 text-red-500">{error}</div>
       ) : (
         <>
-          {/* Browse Courses Section */}
+      {/* Browse Courses Section */}
           <BrowseCourses courses={browseCourses} stats={courseStats} onRequireLogin={() => setAuthModalMode('login')} />
-          {/* Student Success Stories Section */}
+      {/* Student Success Stories Section */}
           <div id="success-stories">
             <StudentSuccessStories 
               onGetStarted={() => {

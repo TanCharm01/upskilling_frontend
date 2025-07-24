@@ -354,49 +354,49 @@ export default function StudentDashboard() {
                   return (
                     <Card key={course.id} className="overflow-hidden shadow-md h-full flex flex-col">
                       <div className="aspect-video bg-gray-200">
-                        <img
+                      <img
                           src={course.course?.thumbnailUrl || DEFAULT_COURSE_IMAGE}
-                          onError={handleImgError}
+                        onError={handleImgError}
                           alt={course.course?.title}
-                          className="w-full h-full object-cover"
-                        />
+                        className="w-full h-full object-cover"
+                      />
                       </div>
                       <CardContent className="p-4 flex flex-col h-full">
-                        <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-2">
                           <h3 className="text-lg font-bold text-gray-900 mb-1">{course.course?.title}</h3>
                           <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.course?.level}</span>
-                        </div>
+                      </div>
                         <p className="text-sm text-gray-700 mb-2 line-clamp-2">{course.course?.description}</p>
-                        <div className="flex items-center text-xs text-gray-500 mb-3">
-                          <span>
+                      <div className="flex items-center text-xs text-gray-500 mb-3">
+                        <span>
                             {Math.round((course.course?.duration ?? 0) / 60) > 0
                               ? `${Math.floor((course.course?.duration ?? 0) / 60)}h `
-                              : ''}
+                            : ''}
                             {(course.course?.duration ?? 0) % 60}m
-                          </span>
-                        </div>
-                        <div className="mb-3">
+                        </span>
+                      </div>
+                      <div className="mb-3">
                           <div className="flex justify-between text-xs text-gray-400 mb-1">
-                            <span>Completed</span>
+                          <span>Completed</span>
                             <span>100%</span>
-                          </div>
-                          <Progress value={100} className="h-2" />
                         </div>
+                        <Progress value={100} className="h-2" />
+                      </div>
                         <div className="flex flex-col gap-2 mt-auto">
                           <Link href={`/courses/${course.course?.id}/learn/${firstLessonId}`}>
-                            <Button variant="outline" className="w-full bg-transparent">
-                              Review
-                            </Button>
-                          </Link>
+                          <Button variant="outline" className="w-full bg-transparent">
+                            Review
+                          </Button>
+                        </Link>
                           <Link href={`/courses/${course.course?.id}/certificate`}>
                             <Button className="w-full bg-green-600 hover:bg-green-700 flex items-center justify-center">
-                              <Award className="h-4 w-4 mr-1" />
-                              Certificate
-                            </Button>
+                            <Award className="h-4 w-4 mr-1" />
+                            Certificate
+                          </Button>
                           </Link>
-                        </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </CardContent>
+                  </Card>
                   );
                 })}
               </div>
@@ -410,38 +410,38 @@ export default function StudentDashboard() {
             {filteredRecommended.length === 0 ? (
               <div className="text-center text-gray-500 py-12">There are currently no recommendations.</div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredRecommended.map((course: DashboardCourse) => (
-                  <Card key={course.id} className="overflow-hidden shadow-md">
-                    <div className="aspect-video bg-gray-200">
-                      <img
-                        src={course.thumbnailUrl && course.thumbnailUrl !== '' ? course.thumbnailUrl : DEFAULT_COURSE_IMAGE}
-                        onError={handleImgError}
-                        alt={course.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
+                <Card key={course.id} className="overflow-hidden shadow-md">
+                  <div className="aspect-video bg-gray-200">
+                    <img
+                      src={course.thumbnailUrl && course.thumbnailUrl !== '' ? course.thumbnailUrl : DEFAULT_COURSE_IMAGE}
+                      onError={handleImgError}
+                      alt={course.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
                         <h3 className="text-lg font-bold text-gray-900 mb-1">{course.title}</h3>
-                        <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.level}</span>
+                      <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">{course.level}</span>
                       </div>
                       <p className="text-sm text-gray-700 mb-2 line-clamp-2">{course.description}</p>
-                      <div className="flex items-center text-xs text-gray-500 mb-3">
-                        <span>
-                          {Math.round((course.duration ?? 0) / 60) > 0
-                            ? `${Math.floor((course.duration ?? 0) / 60)}h `
-                            : ''}
-                          {(course.duration ?? 0) % 60}m
-                        </span>
-                      </div>
-                      <Link href={`/courses/${course.id}/enroll`}>
-                        <Button className="w-full bg-[#0747A1] hover:bg-[#05316e]">Enroll</Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                    <div className="flex items-center text-xs text-gray-500 mb-3">
+                      <span>
+                        {Math.round((course.duration ?? 0) / 60) > 0
+                          ? `${Math.floor((course.duration ?? 0) / 60)}h `
+                          : ''}
+                        {(course.duration ?? 0) % 60}m
+                      </span>
+                    </div>
+                    <Link href={`/courses/${course.id}/enroll`}>
+                      <Button className="w-full bg-[#0747A1] hover:bg-[#05316e]">Enroll</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
             )}
           </div>
         </div>
