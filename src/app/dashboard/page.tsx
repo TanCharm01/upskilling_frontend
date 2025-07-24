@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -81,26 +81,6 @@ export default function StudentDashboard() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div>Loading...</div>
-  if (error) return <div className="text-red-500">{error}</div>
-
-  
-
-  const currentDate = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  })
-
-  // Destructure API data
-  const user = userData?.user;
-  const stats = userData?.stats;
-  const completedCourses = userData?.completedCourses || [];
-  const badges = userData?.badges || [];
-  const recommendedCourses = userData?.recommendedCourses || [];
-  const ongoingCourses = userData?.ongoingCourses || [];
-
   const DEFAULT_COURSE_IMAGE = "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&w=400&q=80";
   const DEFAULT_AVATAR = "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=facearea&w=128&h=128&q=80";
 
@@ -116,6 +96,62 @@ export default function StudentDashboard() {
     const nextLesson = allLessons[lastCompletedIdx + 1] || allLessons[0];
     return nextLesson?.id;
   }
+
+  // Destructure API data
+  const user = userData?.user;
+  const stats = userData?.stats;
+  const badges = userData?.badges || [];
+
+  const completedCourses = useMemo(() => userData?.completedCourses || [], [userData]);
+  const recommendedCourses = useMemo(() => userData?.recommendedCourses || [], [userData]);
+  const ongoingCourses = useMemo(() => userData?.ongoingCourses || [], [userData]);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredOngoing, setFilteredOngoing] = useState<any[]>([]);
+  const [filteredCompleted, setFilteredCompleted] = useState<any[]>([]);
+  const [filteredRecommended, setFilteredRecommended] = useState<any[]>([]);
+
+  useEffect(() => {
+    setFilteredOngoing(ongoingCourses);
+    setFilteredCompleted(completedCourses);
+    setFilteredRecommended(recommendedCourses);
+  }, [ongoingCourses, completedCourses, recommendedCourses]);
+
+  function handleSearch(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      const term = searchTerm.trim().toLowerCase();
+      if (!term) {
+        setFilteredOngoing(ongoingCourses);
+        setFilteredCompleted(completedCourses);
+        setFilteredRecommended(recommendedCourses);
+        return;
+      }
+      setFilteredOngoing(ongoingCourses.filter((item: any) =>
+        item.course.title.toLowerCase().includes(term) ||
+        (item.course.description?.toLowerCase().includes(term))
+      ));
+      setFilteredCompleted(completedCourses.filter((item: any) =>
+        item.course.title.toLowerCase().includes(term) ||
+        (item.course.description?.toLowerCase().includes(term))
+      ));
+      setFilteredRecommended(recommendedCourses.filter((item: any) =>
+        item.title.toLowerCase().includes(term) ||
+        (item.description?.toLowerCase().includes(term))
+      ));
+    }
+  }
+
+  if (loading) return <div>Loading...</div>
+  if (error) return <div className="text-red-500">{error}</div>
+
+  
+
+  const currentDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -152,6 +188,19 @@ export default function StudentDashboard() {
         {/* Navigation Menu (unchanged) */}
         <nav className="flex-1 p-4">
           <div className="space-y-2">
+            <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.location.href = "/";
+                }
+              }}
+              className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors text-gray-700 hover:bg-gray-100"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-5 w-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l9-9m0 0l9 9m-9-9v18" />
+              </svg>
+              <span className="font-medium">Home</span>
+            </button>
             <button
               onClick={() => setActiveNav("dashboard")}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-colors ${
@@ -199,7 +248,13 @@ export default function StudentDashboard() {
               </h1>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input placeholder="Search" className="pl-10 w-64" />
+                <Input
+                  placeholder="Search"
+                  className="pl-10 w-64"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  onKeyDown={handleSearch}
+                />
               </div>
             </div>
             <div className="text-gray-600">
@@ -214,7 +269,7 @@ export default function StudentDashboard() {
                 <button className="text-gray-600 hover:text-gray-900">View All</button>
               </div>
             </div>
-            {ongoingCourses.length === 0 ? (
+            {filteredOngoing.length === 0 ? (
               <div className="text-center text-gray-500 py-12">
                 <p className="mb-4">You have not enrolled in any courses yet.</p>
                 <Link href="/courses">
@@ -223,7 +278,7 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {ongoingCourses.map((item: any) => (
+                {filteredOngoing.map((item: any) => (
                   <Card key={item.id} className="overflow-hidden shadow-md h-full flex flex-col">
                     <div className="aspect-video bg-gray-200">
                       <img
@@ -278,7 +333,7 @@ export default function StudentDashboard() {
               <h2 className="text-2xl font-bold text-gray-900">Completed Courses</h2>
               <button className="text-gray-600 hover:text-gray-900">View All</button>
             </div>
-            {completedCourses.length === 0 ? (
+            {filteredCompleted.length === 0 ? (
               <div className="text-center text-gray-500 py-12">
                 <p className="mb-4">You have not completed any courses yet.</p>
                 <Link href="/courses">
@@ -287,7 +342,7 @@ export default function StudentDashboard() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {completedCourses.map((course: any) => {
+                {filteredCompleted.map((course: any) => {
                   // Get first lessonId if available
                   let firstLessonId = '1';
                   if (course.course?.modules && course.course.modules.length > 0) {
@@ -352,11 +407,11 @@ export default function StudentDashboard() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900">Recommended for you</h2>
             </div>
-            {recommendedCourses.length === 0 ? (
+            {filteredRecommended.length === 0 ? (
               <div className="text-center text-gray-500 py-12">There are currently no recommendations.</div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {recommendedCourses.map((course: DashboardCourse) => (
+                {filteredRecommended.map((course: DashboardCourse) => (
                   <Card key={course.id} className="overflow-hidden shadow-md">
                     <div className="aspect-video bg-gray-200">
                       <img
