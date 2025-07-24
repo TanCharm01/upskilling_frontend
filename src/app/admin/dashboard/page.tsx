@@ -21,6 +21,9 @@ import { Separator } from "@/components/ui/separator"
 import AdminSidebar from '@/components/AdminSidebar'
 import { useEffect, useState } from 'react';
 import { decodeJWT } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useCallback } from 'react';
 
 type DashboardCardProps = {
   title: string;
@@ -57,7 +60,7 @@ type RecentActivityItemProps = {
 };
 
 // Custom component for Recent Activity Items
-function RecentActivityItem({ name, avatar, type, time, role }: RecentActivityItemProps) {
+function RecentActivityItem({ name, avatar, type, time, role, onView }: RecentActivityItemProps & { onView?: () => void }) {
   const typeColor = type === "signup" ? "bg-purple-100 text-purple-800" : "bg-orange-100 text-orange-800"
   // Format time as "time ago"
   const getTimeAgo = (timestamp: string) => {
@@ -99,9 +102,156 @@ function RecentActivityItem({ name, avatar, type, time, role }: RecentActivityIt
           </div>
         </div>
       </div>
-      <Eye className="h-5 w-5 text-gray-400 cursor-pointer" />
+      <Eye className="h-5 w-5 text-gray-400 cursor-pointer" onClick={onView} />
     </div>
   )
+}
+
+function UserInfoModal({ open, onClose, userId, userInfo }: { open: boolean, onClose: () => void, userId?: string, userInfo?: any }) {
+  const [user, setUser] = useState<any>(userInfo || null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    if (!open) return;
+    if (userInfo) { setUser(userInfo); return; }
+    if (!userId) return;
+    setLoading(true);
+    setError('');
+    fetch(`http://localhost:3001/users/${userId}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch user info');
+        return res.json();
+      })
+      .then(data => setUser(data))
+      .catch(() => setError('Failed to fetch user info'))
+      .finally(() => setLoading(false));
+  }, [open, userId, userInfo]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-xl shadow-lg z-10 bg-white p-8">
+        <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-700" onClick={onClose} aria-label="Close">✕</button>
+        <h2 className="text-2xl font-bold mb-4 text-center">User Information</h2>
+        {loading ? <div className="text-center text-gray-500">Loading...</div> : error ? <div className="text-center text-red-500">{error}</div> : user ? (
+          <div className="flex flex-col items-center gap-4">
+            <Avatar className="h-20 w-20">
+              {user.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.firstname || user.name || 'User'} className="h-20 w-20 rounded-full object-cover" />
+              ) : (
+                <AvatarFallback>{user.firstname?.[0] || user.name?.[0] || '?'}</AvatarFallback>
+              )}
+            </Avatar>
+            <div className="text-lg font-semibold">{user.firstname ? `${user.firstname} ${user.lastname}` : user.name}</div>
+            <div className="text-gray-600">{user.email}</div>
+            {user.role && <div className="text-sm text-blue-700 bg-blue-100 rounded px-2 py-1 mt-1">{user.role === 'super_admin' ? 'Super Admin' : user.role.charAt(0).toUpperCase() + user.role.slice(1)}</div>}
+            {user.tagline && <div className="text-sm text-gray-500 mt-2">{user.tagline}</div>}
+            {user.status && <div className="text-xs text-gray-400 mt-1">Status: {user.status}</div>}
+          </div>
+        ) : <div className="text-center text-gray-500">No user info available.</div>}
+      </div>
+    </div>
+  );
+}
+
+const ADMIN_ROLES = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'super_admin', label: 'Super Admin' },
+];
+
+function AdminRegisterModal({ open, onClose, onSuccess }: { open: boolean, onClose: () => void, onSuccess?: () => void }) {
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('admin');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  if (!open) return null;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccess('');
+    const trimmedFirstname = firstname.trim();
+    const trimmedLastname = lastname.trim();
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    if (!trimmedFirstname || !trimmedLastname || !trimmedEmail || !trimmedPassword || !role) {
+      setError('Please fill all fields (no leading/trailing spaces)');
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:3001/admin/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstname: trimmedFirstname,
+          lastname: trimmedLastname,
+          email: trimmedEmail,
+          password: trimmedPassword,
+          role,
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccess('Admin registered successfully!');
+        setTimeout(() => {
+          setSuccess('');
+          onClose();
+          if (onSuccess) onSuccess();
+        }, 1000);
+      } else {
+        setError(data.message || 'Registration failed');
+      }
+    } catch (err) {
+      setError('Network error');
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-xl shadow-lg z-10 bg-white">
+        <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-700" onClick={onClose} aria-label="Close">✕</button>
+        <div className="p-8">
+          <h2 className="text-2xl font-bold mb-2 text-center">Register New Admin</h2>
+          <form className="grid gap-4" onSubmit={handleSubmit}>
+            <div className="grid gap-2">
+              <Label htmlFor="firstname">First name</Label>
+              <Input id="firstname" placeholder="Jane" required value={firstname} onChange={e => setFirstname(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="lastname">Last name</Label>
+              <Input id="lastname" placeholder="Doe" required value={lastname} onChange={e => setLastname(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" placeholder="name@company.com" required value={email} onChange={e => setEmail(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="role">Role</Label>
+              <select id="role" className="border rounded px-3 py-2" value={role} onChange={e => setRole(e.target.value)} required>
+                {ADMIN_ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} />
+            </div>
+            {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+            {success && <div className="text-green-600 text-sm text-center">{success}</div>}
+            <Button type="submit" className="w-full bg-v0-purple hover:bg-v0-purple/90 text-white" disabled={loading}>
+              {loading ? 'Registering...' : 'Register'}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function Dashboard() {
@@ -111,6 +261,10 @@ export default function Dashboard() {
   const [stats, setStats] = useState<any[]>([]);
   const [activityLogs, setActivityLogs] = useState<any[]>([]);
   const [visibleActivities, setVisibleActivities] = useState<number>(5);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(undefined);
+  const [selectedUserInfo, setSelectedUserInfo] = useState<any>(null);
 
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
@@ -185,7 +339,7 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex space-x-3">
-              <Button className="bg-[#0747A1] hover:bg-[#05316e] text-white flex items-center justify-center">
+              <Button className="bg-[#0747A1] hover:bg-[#05316e] text-white flex items-center justify-center" onClick={() => setShowRegisterModal(true)}>
                 <User className="h-4 w-4 mr-2" />
                 Add New User
               </Button>
@@ -229,11 +383,23 @@ export default function Dashboard() {
             <CardContent className="space-y-2">
               {activityLogs.slice(0, visibleActivities).map((log: any, idx: number) => (
                 <div key={idx}>
-                  <RecentActivityItem name={log.name} avatar={log.avatar} type={log.type} time={log.time} role={log.role} />
+                  <RecentActivityItem
+                    name={log.name}
+                    avatar={log.avatar}
+                    type={log.type}
+                    time={log.time}
+                    role={log.role}
+                    onView={() => {
+                      setSelectedUserId(log.userId);
+                      setSelectedUserInfo(null); // Always fetch fresh data
+                      setShowUserModal(true);
+                    }}
+                  />
                   {idx < Math.min(visibleActivities, activityLogs.length) - 1 && <Separator />}
                 </div>
               ))}
             </CardContent>
+            
             {activityLogs.length > visibleActivities && (
               <div className="p-6 pt-0 flex justify-center">
                 <Button variant="outline" className="w-full max-w-xs bg-transparent" onClick={() => setVisibleActivities(v => v + 5)}>
@@ -251,6 +417,8 @@ export default function Dashboard() {
           </Card>
         </section>
       </main>
+      <AdminRegisterModal open={showRegisterModal} onClose={() => setShowRegisterModal(false)} />
+      <UserInfoModal open={showUserModal} onClose={() => setShowUserModal(false)} userId={selectedUserId} userInfo={selectedUserInfo} />
     </div>
   )
 }
