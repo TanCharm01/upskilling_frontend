@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Chrome, Apple, Facebook, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export default function AuthModal({ onClose, initialMode = 'login' }: { onClose: () => void, initialMode?: 'login' | 'signup' }) {
+export default function AuthModal({ onClose, initialMode = 'login', onAuthSuccess }: { onClose: () => void, initialMode?: 'login' | 'signup', onAuthSuccess?: (userData: any) => void }) {
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   // Login state
   const [email, setEmail] = useState("");
@@ -47,6 +47,22 @@ export default function AuthModal({ onClose, initialMode = 'login' }: { onClose:
       if (res.ok && data.access_token) {
         localStorage.setItem("token", data.access_token);
         setSuccess("Login successful!");
+        // Fetch user data and call onAuthSuccess callback
+        try {
+          const userRes = await fetch("http://localhost:3001/dashboard", {
+            headers: {
+              Authorization: `Bearer ${data.access_token}`,
+            },
+          });
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            if (onAuthSuccess) {
+              onAuthSuccess(userData.user);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
         setTimeout(() => {
           setSuccess("");
           onClose();
@@ -91,6 +107,22 @@ export default function AuthModal({ onClose, initialMode = 'login' }: { onClose:
       if (res.ok && data.access_token) {
         localStorage.setItem("token", data.access_token);
         setSuccess("Signup successful!");
+        // Fetch user data and call onAuthSuccess callback
+        try {
+          const userRes = await fetch("http://localhost:3001/dashboard", {
+            headers: {
+              Authorization: `Bearer ${data.access_token}`,
+            },
+          });
+          if (userRes.ok) {
+            const userData = await userRes.json();
+            if (onAuthSuccess) {
+              onAuthSuccess(userData.user);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        }
         setTimeout(() => {
           setSuccess("");
           onClose();

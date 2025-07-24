@@ -6,21 +6,32 @@ interface TestimonialCardProps {
   course: string
   quote: string
   rating: number // e.g., 4 for 4 stars
-  imageSrc: string
+  avatar: string
 }
 
-export default function TestimonialCard({ name, course, quote, rating, imageSrc }: TestimonialCardProps) {
+export default function TestimonialCard({ name, course, quote, rating, avatar }: TestimonialCardProps) {
   return (
     <div className="w-[380px] flex flex-col items-start p-8 bg-white rounded-lg shadow-md h-[295px]">
       <div className="flex items-center mb-4">
-        <div className="relative w-16 h-16 rounded-lg overflow-hidden mr-10">
-          <Image
-            src={imageSrc || "/placeholder.svg?height=64&width=64"}
-            alt={`Profile picture of ${name}`}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-lg" // Apply rounded corners to the image itself
-          />
+        <div className="relative w-16 h-16 rounded-full overflow-hidden mr-10 flex items-center justify-center bg-amber-700">
+          {avatar ? (
+            <Image
+              src={avatar}
+              alt={`Profile picture of ${name}`}
+              layout="fill"
+              objectFit="cover"
+              className="rounded-full"
+            />
+          ) : (
+            <span className="text-amber-50 text-2xl font-bold">
+              {(() => {
+                if (!name) return '?';
+                const words = name.trim().split(' ');
+                if (words.length === 1) return words[0].charAt(0).toUpperCase();
+                return words[0].charAt(0).toUpperCase() + words[1].charAt(0).toUpperCase();
+              })()}
+            </span>
+          )}
         </div>
         <div>
           <h3 className="text-xl font-bold">{name}</h3>

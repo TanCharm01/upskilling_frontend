@@ -6,6 +6,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import BrowseCourses from "@/components/ui/browse_courses" // Import the new component
 import StudentSuccessStories from "@/components/ui/success_stories"
+import { useRouter } from "next/navigation"
 
 export default function LandingPage() {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | null>(null);
@@ -14,6 +15,38 @@ export default function LandingPage() {
   const [courseStats, setCourseStats] = useState<any>(null);
   const [browseCourses, setBrowseCourses] = useState<any[]>([]);
   const [feedback, setFeedback] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [userLoading, setUserLoading] = useState(true);
+  const router = useRouter();
+
+  // Check authentication status
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const response = await fetch("http://localhost:3001/dashboard", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Dashboard API response:', data); // Debug log
+            setUser(data.user);
+          } else {
+            localStorage.removeItem("token");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          localStorage.removeItem("token");
+        }
+      }
+      setUserLoading(false);
+    };
+
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -43,6 +76,16 @@ export default function LandingPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUser(null);
+  };
+
+  const handleProfileClick = () => {
+    router.push("/profile");
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-8">
@@ -51,29 +94,115 @@ export default function LandingPage() {
         <header className="flex flex-col md:flex-row items-center justify-between w-full py-6">
           <div className="text-2xl font-bold text-uncommonBlue">uncommon</div>
           <nav className="hidden space-x-8 md:flex">
-            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue">
+            <button
+              className="text-lg font-medium hover:text-uncommonBlue focus:outline-none bg-transparent"
+              onClick={() => router.push('/')}
+            >
               Home
-            </Link>
-            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue">
+            </button>
+            <button
+              className="text-lg font-medium hover:text-uncommonBlue focus:outline-none bg-transparent"
+              onClick={() => {
+                if (user) {
+                  router.push('/dashboard');
+                } else {
+                  setAuthModalMode('login');
+                }
+              }}
+            >
+              Dashboard
+            </button>
+            <button
+              className="text-lg font-medium hover:text-uncommonBlue focus:outline-none bg-transparent"
+              onClick={() => {
+                if (user) {
+                  router.push('/courses');
+                } else {
+                  setAuthModalMode('login');
+                }
+              }}
+            >
               Courses
-            </Link>
-            <Link href="#" className="text-lg font-medium hover:text-uncommonBlue">
+            </button>
+            <button
+              className="text-lg font-medium hover:text-uncommonBlue focus:outline-none bg-transparent"
+              onClick={() => {
+                const section = document.getElementById('success-stories');
+                if (section) {
+                  section.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
               About
-            </Link>
+            </button>
           </nav>
           <div className="flex space-x-4 mt-4 md:mt-0">
-            <Button
-              className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md"
-              onClick={() => setAuthModalMode('login')}
-            >
-              Login
-            </Button>
-            <Button
-              className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md"
-              onClick={() => setAuthModalMode('signup')}
-            >
-              Sign Up
-            </Button>
+            {!userLoading && (
+              user ? (
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
+                    <div 
+                      className="w-8 h-8 rounded-full overflow-hidden cursor-pointer hover:opacity-80 flex items-center justify-center"
+                      onClick={handleProfileClick}
+                    >
+                      {user.avatarUrl ? (
+                        <img
+                          src={user.avatarUrl}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-amber-700 flex items-center justify-center">
+                          {(() => {
+                            let initials = '?';
+                            if (user.name) {
+                              const words = user.name.trim().split(' ');
+                              if (words.length === 1) {
+                                initials = words[0].charAt(0).toUpperCase();
+                              } else if (words.length > 1) {
+                                initials = words[0].charAt(0).toUpperCase() + words[1].charAt(0).toUpperCase();
+                              }
+                            }
+                            return (
+                              <span className="text-amber-50 text-sm font-semibold">
+                                {initials}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                    <span 
+                      className="text-sm font-medium text-gray-700 cursor-pointer hover:text-uncommonBlue"
+                      onClick={handleProfileClick}
+                    >
+                    </span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleLogout}
+                    className="text-gray-600 hover:text-gray-800 px-3 py-1 text-sm"
+                  >
+                    Logout
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Button
+                    className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md"
+                    onClick={() => setAuthModalMode('login')}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-6 py-2 rounded-md"
+                    onClick={() => setAuthModalMode('signup')}
+                  >
+                    Sign Up
+                  </Button>
+                </>
+              )
+            )}
           </div>
         </header>
 
@@ -95,7 +224,13 @@ export default function LandingPage() {
               </a>
               <Button
                 className="bg-uncommonBlue hover:bg-uncommonBlue-dark text-white px-4 py-5 rounded-md text-xs"
-                onClick={() => setAuthModalMode('login')}
+                onClick={() => {
+                  if (user) {
+                    router.push('/dashboard');
+                  } else {
+                    setAuthModalMode('login');
+                  }
+                }}
               >
                 Get Started &gt;&gt;
               </Button>
@@ -143,7 +278,16 @@ export default function LandingPage() {
           <BrowseCourses courses={browseCourses} stats={courseStats} onRequireLogin={() => setAuthModalMode('login')} />
           {/* Student Success Stories Section */}
           <div id="success-stories">
-            <StudentSuccessStories onGetStarted={() => setAuthModalMode('login')} feedback={feedback} />
+            <StudentSuccessStories 
+              onGetStarted={() => {
+                if (user) {
+                  router.push('/dashboard');
+                } else {
+                  setAuthModalMode('login');
+                }
+              }} 
+              feedback={feedback} 
+            />
           </div>
         </>
       )}
@@ -151,6 +295,7 @@ export default function LandingPage() {
         <AuthModal
           onClose={() => setAuthModalMode(null)}
           initialMode={authModalMode}
+          onAuthSuccess={(userData) => setUser(userData)}
         />
       )}
       </div>
