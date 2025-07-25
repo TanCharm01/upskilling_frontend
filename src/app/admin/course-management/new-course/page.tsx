@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ImageIcon, Plus, Minus, ArrowRight, ArrowLeft } from "lucide-react" // Import Plus and Minus icons
 import Link from "next/link"
 import { useRouter } from 'next/navigation';
+import NotificationModal from '@/components/ui/NotificationModal';
 
 export default function AddNewCourse() {
   const [categories, setCategories] = useState<string[]>([]);
@@ -24,6 +25,59 @@ export default function AddNewCourse() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter();
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  // Add modal color state and pass to NotificationModal
+  const [modalColor, setModalColor] = useState<string|undefined>(undefined);
+
+  // Mark as dirty on any field change
+  function markDirty() { setHasUnsavedChanges(true); }
+
+  function showModal(message: string, timeout = 2000) {
+    setModalMessage(message);
+    setModalOpen(true);
+    // NotificationModal auto-closes after timeout
+  }
+
+  // Add beforeunload warning for unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasUnsavedChanges]);
+
+  // Save handler
+  function handleSave() {
+    const courseData = {
+      title: titleRef.current?.value || '',
+      description: descriptionRef.current?.value || '',
+      category,
+      learningObjectives,
+      level,
+      badges,
+      previewUrl,
+    };
+    localStorage.setItem('newCourseData', JSON.stringify(courseData));
+    setHasUnsavedChanges(false);
+    showModal('Course saved!');
+  }
+
+  // Confirm navigation if unsaved changes
+  function confirmNav(action: () => void) {
+    if (!hasUnsavedChanges) {
+      action();
+    } else {
+      setModalMessage('You have unsaved changes. Please save before leaving.');
+      setModalOpen(true);
+    }
+  }
+
   useEffect(() => {
     setCategoriesLoading(true);
     setCategoriesError('');
@@ -54,6 +108,28 @@ export default function AddNewCourse() {
       .then(data => setAllBadges(data))
       .catch(() => setBadgesError('Failed to fetch badges'))
       .finally(() => setBadgesLoading(false));
+  }, []);
+
+  // Add refs for form fields
+  const titleRef = useRef<HTMLInputElement>(null);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load course data from localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('newCourseData');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.title && titleRef.current) titleRef.current.value = data.title;
+        if (data.description && descriptionRef.current) descriptionRef.current.value = data.description;
+        if (data.category) setCategory(data.category);
+        if (data.learningObjectives) setLearningObjectives(data.learningObjectives);
+        if (data.level) setLevel(data.level);
+        if (data.badges) setBadges(data.badges);
+        if (data.previewUrl) setPreviewUrl(data.previewUrl);
+      } catch {}
+    }
   }, []);
 
   // Handle file selection
@@ -105,7 +181,7 @@ export default function AddNewCourse() {
         <header className="mb-8">
         <button
           className="flex items-center gap-2 px-3 py-2 mb-6 bg-transparent text-gray-600 hover:bg-gray-100 rounded transition"
-          onClick={() => router.push('/admin/course-management')}
+          onClick={() => confirmNav(() => router.push('/admin/course-management'))}
           type="button"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -138,7 +214,7 @@ export default function AddNewCourse() {
                   >
                     Course Title
                   </label>
-                  <Input id="course-title" placeholder="Course Title" className="w-full" />
+                  <Input id="course-title" placeholder="Course Title" className="w-full" ref={titleRef} onChange={markDirty} />
                 </div>
                 <div className="space-y-2">
                   <label
@@ -147,7 +223,7 @@ export default function AddNewCourse() {
                   >
                     Course Description
                   </label>
-                  <Textarea id="course-description" placeholder="Course Description" className="min-h-[120px] w-full" />
+                  <Textarea id="course-description" placeholder="Course Description" className="min-h-[120px] w-full" ref={descriptionRef} onChange={markDirty} />
                 </div>
                 <div className="space-y-2">
                   <label
@@ -156,7 +232,7 @@ export default function AddNewCourse() {
                   >
                     Category
                   </label>
-                  <Select onValueChange={setCategory} value={category} required disabled={categoriesLoading || !!categoriesError}>
+                  <Select onValueChange={v => { setCategory(v); markDirty(); }} value={category} required disabled={categoriesLoading || !!categoriesError}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={categoriesLoading ? "Loading categories..." : categoriesError ? "Failed to load categories" : "Select category"} />
                   </SelectTrigger>
@@ -177,13 +253,13 @@ export default function AddNewCourse() {
                       <Input
                         placeholder={`Objective ${index + 1}`}
                         value={objective}
-                        onChange={(e) => handleObjectiveChange(index, e.target.value)}
+                        onChange={(e) => { handleObjectiveChange(index, e.target.value); markDirty(); }}
                       />
                       {learningObjectives.length > 1 && (
                         <Button
                           variant="outline"
                           
-                          onClick={() => handleRemoveObjective(index)}
+                          onClick={() => { handleRemoveObjective(index); markDirty(); }}
                           className="text-red-500 hover:bg-red-100"
                         >
                           <Minus className="h-4 w-4" />
@@ -192,7 +268,7 @@ export default function AddNewCourse() {
                       )}
                     </div>
                   ))}
-                  <Button variant="outline" onClick={handleAddObjective} className="w-full mt-2 bg-transparent">
+                  <Button variant="outline" onClick={() => { handleAddObjective(); markDirty(); }} className="w-full mt-2 bg-transparent">
                     <Plus className="h-4 w-4 mr-2" />
                     Add Objective
                   </Button>
@@ -200,7 +276,7 @@ export default function AddNewCourse() {
                 {/* Course Level Section */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium leading-none">Course Level</label>
-                  <Select value={level} onValueChange={setLevel} required>
+                  <Select value={level} onValueChange={v => { setLevel(v); markDirty(); }} required>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select level" />
                     </SelectTrigger>
@@ -226,7 +302,7 @@ export default function AddNewCourse() {
                           type="button"
                           title={badge.description}
                           className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs ${badges.includes(badge.id) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'}`}
-                          onClick={() => setBadges(badges.includes(badge.id) ? badges.filter(b => b !== badge.id) : [...badges, badge.id])}
+                          onClick={() => { setBadges(badges.includes(badge.id) ? badges.filter(b => b !== badge.id) : [...badges, badge.id]); markDirty(); }}
                         >
                           {badge.iconUrl && (
                             <img src={badge.iconUrl} alt={badge.name} className="h-4 w-4 rounded-full" />
@@ -273,21 +349,60 @@ export default function AddNewCourse() {
                     accept="image/*"
                     ref={fileInputRef}
                     className="hidden"
-                    onChange={handleFileChange}
+                    onChange={e => { handleFileChange(e); markDirty(); }}
                   />
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          <div className="flex justify-end mt-8">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2">
+          <div className="flex justify-between items-end mt-8 w-full">
+            <Button
+              variant="outline"
+              onClick={() => {
+                localStorage.removeItem('newCourseData');
+                if (titleRef.current) titleRef.current.value = '';
+                if (descriptionRef.current) descriptionRef.current.value = '';
+                setCategory('');
+                setLearningObjectives(['']);
+                setLevel('');
+                setBadges([]);
+                setPreviewUrl(null);
+                showModal('Course reset!');
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
+              onClick={() => {
+                const courseData = {
+                  title: titleRef.current?.value || '',
+                  description: descriptionRef.current?.value || '',
+                  category,
+                  learningObjectives,
+                  level,
+                  badges,
+                  previewUrl,
+                };
+                localStorage.setItem('newCourseData', JSON.stringify(courseData));
+                setHasUnsavedChanges(false);
+                setModalMessage('Course saved!');
+                setModalOpen(true);
+                setModalColor('green');
+                setTimeout(() => {
+                  setModalColor(undefined);
+                  router.push('/admin/course-management/new-module');
+                }, 2000);
+              }}
+            >
               <span>Next</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </section>
       </main>
+      <NotificationModal open={modalOpen} onClose={() => setModalOpen(false)} message={modalMessage} color={modalColor} />
     </div>
   )
 }

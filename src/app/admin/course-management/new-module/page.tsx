@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 // import { AppSidebar } from "@/components/app-sidebar"
 import AdminSidebar from "@/components/AdminSidebar"
 import { Button } from "@/components/ui/button"
@@ -8,20 +8,93 @@ import { Plus, ArrowLeft, ArrowRight, X } from "lucide-react" // Import X icon f
 import Link from "next/link"
 import { LessonBlock } from "@/components/lesson-block"
 import { CardHeader, CardTitle } from "@/components/ui/card" // Import CardHeader and CardTitle
+import { useRouter } from 'next/navigation';
+import NotificationModal from '@/components/ui/NotificationModal';
 
 export default function UploadCourseContent() {
-  const [modules, setModules] = useState([{ id: 1, lessons: [{ id: 1 }] }])
-  const [nextModuleId, setNextModuleId] = useState(2)
-  const [nextLessonId, setNextLessonId] = useState(2)
+  const router = useRouter();
+  const [modules, setModules] = useState([{ id: 1, lessons: [{ id: 1 }] }]);
+  const [nextModuleId, setNextModuleId] = useState(2);
+  const [nextLessonId, setNextLessonId] = useState(2);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+
+  // Load modules data from localStorage on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('newModulesData');
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (Array.isArray(data) && data.length > 0) {
+          setModules(data);
+          // Find the max id for modules and lessons to avoid id collision
+          let maxModuleId = 1;
+          let maxLessonId = 1;
+          data.forEach((mod: any) => {
+            if (mod.id && mod.id > maxModuleId) maxModuleId = mod.id;
+            if (Array.isArray(mod.lessons)) {
+              mod.lessons.forEach((lesson: any) => {
+                if (lesson.id && lesson.id > maxLessonId) maxLessonId = lesson.id;
+              });
+            }
+          });
+          setNextModuleId(maxModuleId + 1);
+          setNextLessonId(maxLessonId + 1);
+        }
+      } catch {}
+    }
+  }, []);
+
+  // Mark as dirty on any change
+  function markDirty() { setHasUnsavedChanges(true); }
+
+  // Add beforeunload warning for unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [hasUnsavedChanges]);
+
+  function showModal(message: string, timeout = 2000) {
+    setModalMessage(message);
+    setModalOpen(true);
+    // NotificationModal auto-closes after timeout
+  }
+
+  // Save handler
+  function handleSave() {
+    localStorage.setItem('newModulesData', JSON.stringify(modules));
+    setHasUnsavedChanges(false);
+    showModal('Modules saved!');
+  }
+
+  // Confirm navigation if unsaved changes
+  function confirmNav(action: () => void) {
+    if (!hasUnsavedChanges) {
+      action();
+    } else {
+      setModalMessage('You have unsaved changes. Please save before leaving.');
+      setModalOpen(true);
+    }
+  }
 
   const handleAddModule = () => {
-    setModules([...modules, { id: nextModuleId, lessons: [{ id: nextLessonId }] }])
-    setNextModuleId(nextModuleId + 1)
-    setNextLessonId(nextLessonId + 1)
+    setModules([...modules, { id: nextModuleId, lessons: [{ id: nextLessonId }] }]);
+    setNextModuleId(nextModuleId + 1);
+    setNextLessonId(nextLessonId + 1);
+    markDirty();
   }
 
   const handleDeleteModule = (moduleId: number) => {
-    setModules(modules.filter((module) => module.id !== moduleId))
+    setModules(modules.filter((module) => module.id !== moduleId));
+    markDirty();
   }
 
   const handleAddLesson = (moduleId: number) => {
@@ -29,8 +102,9 @@ export default function UploadCourseContent() {
       modules.map((module) =>
         module.id === moduleId ? { ...module, lessons: [...module.lessons, { id: nextLessonId }] } : module,
       ),
-    )
-    setNextLessonId(nextLessonId + 1)
+    );
+    setNextLessonId(nextLessonId + 1);
+    markDirty();
   }
 
   const handleDeleteLesson = (moduleId: number, lessonId: number) => {
@@ -42,12 +116,13 @@ export default function UploadCourseContent() {
             : module,
         )
         .filter((module) => module.lessons.length > 0),
-    )
+    );
+    markDirty();
   }
 
   const handlePreviewAndPublish = () => {
-    console.log("Preview & Publish button clicked!")
-    alert("Course content is ready for preview and publishing! (This is a placeholder action)")
+    handleSave();
+    router.push('/admin/course-management/course-preview');
   }
 
   return (
@@ -109,19 +184,52 @@ export default function UploadCourseContent() {
           ))}
 
           <div className="flex justify-between mt-8">
-            <Link href="/course-management/new">
-              <Button variant="outline" className="bg-transparent flex items-center justify-center gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back</span>
-              </Button>
-            </Link>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              className="bg-transparent flex items-center justify-center gap-2"
+              onClick={() => confirmNav(() => router.back())}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span>Back</span>
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
+              onClick={() => confirmNav(() => {
+                handleSave();
+                showModal('Modules saved!');
+                setTimeout(() => {
+                  router.push('/admin/course-management/course-preview');
+                }, 2000);
+              })}
+            >
               <span>Next</span>
               <ArrowRight className="h-4 w-4" />
             </Button>
+            <div className="flex gap-2 ml-4">
+              <Button
+                variant="outline"
+                onClick={handleSave}
+                disabled={!hasUnsavedChanges}
+              >
+                Save
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  localStorage.removeItem('newModulesData');
+                  setModules([{ id: 1, lessons: [{ id: 1 }] }]);
+                  setNextModuleId(2);
+                  setNextLessonId(2);
+                  setHasUnsavedChanges(false);
+                  showModal('Modules reset!');
+                }}
+              >
+                Reset
+              </Button>
+            </div>
           </div>
         </section>
       </main>
+      <NotificationModal open={modalOpen} onClose={() => setModalOpen(false)} message={modalMessage} />
     </div>
   )
 }
