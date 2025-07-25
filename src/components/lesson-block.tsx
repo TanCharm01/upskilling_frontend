@@ -10,105 +10,104 @@ import { Textarea } from "@/components/ui/textarea"
 import { File, Trash, ImageIcon, Video, FileText, Plus, Minus, X } from "lucide-react" // Import X icon for delete
 
 interface LessonBlockProps {
-  lessonNumber: number
-  onDelete: () => void // Make onDelete required
+  lessonNumber: number;
+  lesson: any;
+  onChange: (updatedLesson: any) => void;
+  onDelete: () => void;
 }
 
-export function LessonBlock({ lessonNumber, onDelete }: LessonBlockProps) {
-  const [fileName, setFileName] = useState<string | null>(null)
-  const [fileSize, setFileSize] = useState<string | null>(null)
-  const [fileType, setFileType] = useState<string | null>(null)
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null)
+export function LessonBlock({ lessonNumber, lesson, onChange, onDelete }: LessonBlockProps) {
+  // Controlled fields from parent
+  const handleFieldChange = (field: string, value: any) => {
+    onChange({ ...lesson, [field]: value });
+  };
 
-  const [additionalResources, setAdditionalResources] = useState([{ title: "", link: "" }])
-
+  // Media fields
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
-      const file = event.target.files[0]
-      setFileName(file.name)
-      setFileSize((file.size / 1024 / 1024).toFixed(1) + "MB")
-
-      const url = URL.createObjectURL(file)
-      setFilePreviewUrl(url)
-
-      if (file.type.startsWith("image/")) {
-        setFileType("image")
-      } else if (file.type.startsWith("video/")) {
-        setFileType("video")
-      } else if (file.type === "application/pdf") {
-        setFileType("pdf")
-      } else {
-        setFileType("other")
-      }
+      const file = event.target.files[0];
+      const url = URL.createObjectURL(file);
+      let fileType = 'other';
+      if (file.type.startsWith('image/')) fileType = 'image';
+      else if (file.type.startsWith('video/')) fileType = 'video';
+      else if (file.type === 'application/pdf') fileType = 'pdf';
+      onChange({
+        ...lesson,
+        fileName: file.name,
+        fileSize: (file.size / 1024 / 1024).toFixed(1) + 'MB',
+        fileType,
+        filePreviewUrl: url,
+      });
     }
-  }
+  };
 
   const handleDeleteMedia = () => {
-    setFileName(null)
-    setFileSize(null)
-    setFileType(null)
-    if (filePreviewUrl) {
-      URL.revokeObjectURL(filePreviewUrl)
-      setFilePreviewUrl(null)
+    if (lesson.filePreviewUrl) {
+      URL.revokeObjectURL(lesson.filePreviewUrl);
     }
-  }
+    onChange({
+      ...lesson,
+      fileName: null,
+      fileSize: null,
+      fileType: null,
+      filePreviewUrl: null,
+    });
+  };
 
   const renderMediaPreview = () => {
-    if (!filePreviewUrl) {
+    if (!lesson.filePreviewUrl) {
       return (
         <div className="mb-4 p-4 bg-gray-100 rounded-lg">
           <ImageIcon className="h-12 w-12 text-gray-400" />
         </div>
-      )
+      );
     }
-
-    switch (fileType) {
-      case "image":
+    switch (lesson.fileType) {
+      case 'image':
         return (
           <img
-            src={filePreviewUrl || "/placeholder.svg"}
+            src={lesson.filePreviewUrl || "/placeholder.svg"}
             alt="Media Preview"
             className="max-h-full max-w-full object-contain"
           />
-        )
-      case "video":
+        );
+      case 'video':
         return (
-          <video controls src={filePreviewUrl} className="max-h-full max-w-full object-contain">
+          <video controls src={lesson.filePreviewUrl} className="max-h-full max-w-full object-contain">
             Your browser does not support the video tag.
           </video>
-        )
-      case "pdf":
+        );
+      case 'pdf':
         return (
           <div className="flex flex-col items-center justify-center h-full w-full text-gray-500">
             <FileText className="h-16 w-16 mb-2" />
             <p>PDF Preview (not directly supported in browser)</p>
-            <p className="text-sm">{fileName}</p>
+            <p className="text-sm">{lesson.fileName}</p>
           </div>
-        )
+        );
       default:
         return (
           <div className="flex flex-col items-center justify-center h-full w-full text-gray-500">
             <File className="h-16 w-16 mb-2" />
             <p>File Preview</p>
-            <p className="text-sm">{fileName}</p>
+            <p className="text-sm">{lesson.fileName}</p>
           </div>
-        )
+        );
     }
-  }
+  };
 
+  // Additional resources
   const handleAddResource = () => {
-    setAdditionalResources([...additionalResources, { title: "", link: "" }])
-  }
-
+    onChange({ ...lesson, additionalResources: [...(lesson.additionalResources || [{ title: '', link: '' }]), { title: '', link: '' }] });
+  };
   const handleRemoveResource = (index: number) => {
-    setAdditionalResources(additionalResources.filter((_, i) => i !== index))
-  }
-
-  const handleResourceChange = (index: number, field: "title" | "link", value: string) => {
-    const newResources = [...additionalResources]
-    newResources[index] = { ...newResources[index], [field]: value }
-    setAdditionalResources(newResources)
-  }
+    onChange({ ...lesson, additionalResources: (lesson.additionalResources || []).filter((_: any, i: number) => i !== index) });
+  };
+  const handleResourceChange = (index: number, field: 'title' | 'link', value: string) => {
+    const newResources = [...(lesson.additionalResources || [{ title: '', link: '' }])];
+    newResources[index] = { ...newResources[index], [field]: value };
+    onChange({ ...lesson, additionalResources: newResources });
+  };
 
   return (
     <Card className="mb-6">
@@ -127,7 +126,13 @@ export function LessonBlock({ lessonNumber, onDelete }: LessonBlockProps) {
               <label htmlFor={`lesson-title-${lessonNumber}`} className="text-sm font-medium">
                 Lesson Title
               </label>
-              <Input id={`lesson-title-${lessonNumber}`} placeholder="Enter lesson title" className="w-full" />
+              <Input
+                id={`lesson-title-${lessonNumber}`}
+                placeholder="Enter lesson title"
+                className="w-full"
+                value={lesson.title || ''}
+                onChange={e => handleFieldChange('title', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <label htmlFor={`lesson-notes-${lessonNumber}`} className="text-sm font-medium">
@@ -137,12 +142,14 @@ export function LessonBlock({ lessonNumber, onDelete }: LessonBlockProps) {
                 id={`lesson-notes-${lessonNumber}`}
                 placeholder="Add detailed notes for this lesson."
                 className="min-h-[100px] w-full"
+                value={lesson.notes || ''}
+                onChange={e => handleFieldChange('notes', e.target.value)}
               />
             </div>
             {/* Additional Resources Section */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Additional Resources</label>
-              {additionalResources.map((resource, index) => (
+              {lesson.additionalResources?.map((resource: any, index: number) => (
                 <div key={index} className="flex items-center gap-2">
                   <Input
                     placeholder="Resource Title"
@@ -156,7 +163,7 @@ export function LessonBlock({ lessonNumber, onDelete }: LessonBlockProps) {
                     onChange={(e) => handleResourceChange(index, "link", e.target.value)}
                     className="flex-1 w-full"
                   />
-                  {additionalResources.length > 1 && (
+                  {lesson.additionalResources?.length > 1 && (
                     <Button
                       variant="outline"
                       onClick={() => handleRemoveResource(index)}
@@ -177,7 +184,15 @@ export function LessonBlock({ lessonNumber, onDelete }: LessonBlockProps) {
               <label htmlFor={`lesson-duration-${lessonNumber}`} className="text-sm font-medium">
                 Lesson Duration (minutes)
               </label>
-              <Input id={`lesson-duration-${lessonNumber}`} type="number" placeholder="e.g., 30" min="0" className="w-full" />
+              <Input
+                id={`lesson-duration-${lessonNumber}`}
+                type="number"
+                placeholder="e.g., 30"
+                min="0"
+                className="w-full"
+                value={lesson.duration || ''}
+                onChange={e => handleFieldChange('duration', e.target.value)}
+              />
             </div>
           </div>
           {/* Right: Lesson Media */}
@@ -187,18 +202,18 @@ export function LessonBlock({ lessonNumber, onDelete }: LessonBlockProps) {
               <p className="text-sm text-muted-foreground">
                 Add your course media below. This could be a PDF, video, or image.
               </p>
-              {fileName ? (
+              {lesson.fileName ? (
                 <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg h-[350px] text-center relative overflow-hidden w-full">
                   {renderMediaPreview()}
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-white/80 backdrop-blur-sm p-2 rounded-lg">
                     <div className="flex items-center space-x-2">
-                      {fileType === "image" && <ImageIcon className="h-4 w-4 text-gray-600" />}
-                      {fileType === "video" && <Video className="h-4 w-4 text-gray-600" />}
-                      {fileType === "pdf" && <FileText className="h-4 w-4 text-gray-600" />}
-                      {fileType === "other" && <File className="h-4 w-4 text-gray-600" />}
+                      {lesson.fileType === "image" && <ImageIcon className="h-4 w-4 text-gray-600" />}
+                      {lesson.fileType === "video" && <Video className="h-4 w-4 text-gray-600" />}
+                      {lesson.fileType === "pdf" && <FileText className="h-4 w-4 text-gray-600" />}
+                      {lesson.fileType === "other" && <File className="h-4 w-4 text-gray-600" />}
                       <div>
-                        <p className="font-medium text-sm">{fileName}</p>
-                        <p className="text-xs text-muted-foreground">{fileSize}</p>
+                        <p className="font-medium text-sm">{lesson.fileName}</p>
+                        <p className="text-xs text-muted-foreground">{lesson.fileSize}</p>
                       </div>
                     </div>
                     <Button variant="outline" onClick={handleDeleteMedia} className="text-red-500 hover:bg-red-100">

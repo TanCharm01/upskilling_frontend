@@ -22,12 +22,16 @@ export default function UploadCourseContent() {
 
   // Load modules data from localStorage on mount
   useEffect(() => {
+    loadModulesFromStorage();
+  }, []);
+
+  function loadModulesFromStorage() {
     if (typeof window === 'undefined') return;
     const saved = localStorage.getItem('newModulesData');
     if (saved) {
       try {
         const data = JSON.parse(saved);
-        if (Array.isArray(data) && data.length > 0) {
+        if (Array.isArray(data)) {
           setModules(data);
           // Find the max id for modules and lessons to avoid id collision
           let maxModuleId = 1;
@@ -45,7 +49,7 @@ export default function UploadCourseContent() {
         }
       } catch {}
     }
-  }, []);
+  }
 
   // Mark as dirty on any change
   function markDirty() { setHasUnsavedChanges(true); }
@@ -153,10 +157,9 @@ export default function UploadCourseContent() {
             <div key={module.id} className="mb-8 p-6 border rounded-lg bg-gray-50">
               <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
                 <CardTitle className="text-2xl font-bold">Module {moduleIndex + 1}</CardTitle>
-                {modules.length > 1 && ( // Only show delete if more than one module
+                {modules.length > 1 && (
                   <Button
                     variant="outline"
-                    // size="icon"
                     onClick={() => handleDeleteModule(module.id)}
                     className="text-red-500 hover:bg-red-100"
                   >
@@ -169,6 +172,14 @@ export default function UploadCourseContent() {
                 <LessonBlock
                   key={lesson.id}
                   lessonNumber={lessonIndex + 1}
+                  lesson={lesson}
+                  onChange={updatedLesson => {
+                    setModules(prevModules => prevModules.map(m =>
+                      m.id === module.id
+                        ? { ...m, lessons: m.lessons.map(l => l.id === lesson.id ? updatedLesson : l) }
+                        : m
+                    ));
+                  }}
                   onDelete={() => handleDeleteLesson(module.id, lesson.id)}
                 />
               ))}
@@ -183,49 +194,54 @@ export default function UploadCourseContent() {
             </div>
           ))}
 
-          <div className="flex justify-between mt-8">
-            <Button
-              variant="outline"
-              className="bg-transparent flex items-center justify-center gap-2"
-              onClick={() => confirmNav(() => router.back())}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
-            </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
-              onClick={() => confirmNav(() => {
-                handleSave();
-                showModal('Modules saved!');
-                setTimeout(() => {
-                  router.push('/admin/course-management/course-preview');
-                }, 2000);
-              })}
-            >
-              <span>Next</span>
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-            <div className="flex gap-2 ml-4">
+          <div className="flex flex-col items-center mt-8 w-full">
+            <div className="flex justify-between w-full">
               <Button
                 variant="outline"
-                onClick={handleSave}
-                disabled={!hasUnsavedChanges}
-              >
-                Save
-              </Button>
-              <Button
-                variant="outline"
+                className="bg-transparent flex items-center justify-center gap-2"
                 onClick={() => {
-                  localStorage.removeItem('newModulesData');
-                  setModules([{ id: 1, lessons: [{ id: 1 }] }]);
-                  setNextModuleId(2);
-                  setNextLessonId(2);
+                  // Always save modules before navigating back
+                  localStorage.setItem('newModulesData', JSON.stringify(modules));
                   setHasUnsavedChanges(false);
-                  showModal('Modules reset!');
+                  router.back();
                 }}
               >
-                Reset
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back</span>
+              </Button>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-2"
+                onClick={() => {
+                  // Always save modules before navigating next
+                  localStorage.setItem('newModulesData', JSON.stringify(modules));
+                  setHasUnsavedChanges(false);
+                  setModalMessage('Modules saved!');
+                  setModalOpen(true);
+                  setTimeout(() => {
+                    router.push('/admin/course-management/course-preview');
+                  }, 2000);
+                }}
+              >
+                <span>Next</span>
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
+            <div className="w-full flex justify-center mt-4">
+              <div className="w-2/2 border-t border-gray-300" />
+            </div>
+            <Button
+              variant="outline"
+              className="mt-4 border-red-500 text-red-600 hover:bg-red-50 hover:border-red-600"
+              onClick={() => {
+                localStorage.removeItem('newModulesData');
+                setModules([{ id: 1, lessons: [{ id: 1 }] }]);
+                setNextModuleId(2);
+                setNextLessonId(2);
+                setHasUnsavedChanges(false);
+                showModal('Modules reset!');
+              }}
+            >
+              Reset
+            </Button>
           </div>
         </section>
       </main>
