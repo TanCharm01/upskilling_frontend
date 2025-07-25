@@ -112,11 +112,40 @@ export default function CoursePreview() {
                   <AccordionTrigger className="text-lg font-semibold hover:no-underline">
                     {module.title || `Module ${idx + 1}`}
                   </AccordionTrigger>
-                  <AccordionContent className="pl-4 py-2 space-y-2">
+                  <AccordionContent className="pl-4 py-2 space-y-4">
                     {module.lessons && module.lessons.length > 0 ? (
                       module.lessons.map((lesson: any, lidx: number) => (
-                        <div key={lesson.id || lidx} className="text-muted-foreground">
-                          {lesson.title || `Lesson ${lidx + 1}`}
+                        <div key={lesson.id || lidx} className="border rounded-lg p-4 mb-2 bg-gray-50">
+                          <div className="font-semibold text-lg mb-1">{lesson.title || `Lesson ${lidx + 1}`}</div>
+                          {lesson.notes && <div className="mb-1"><span className="font-medium">Notes:</span> {lesson.notes}</div>}
+                          {lesson.duration && <div className="mb-1"><span className="font-medium">Duration:</span> {lesson.duration} min</div>}
+                          {lesson.additionalResources && lesson.additionalResources.length > 0 && (
+                            <div className="mb-1">
+                              <span className="font-medium">Resources:</span>
+                              <ul className="list-disc list-inside ml-4">
+                                {lesson.additionalResources.map((res: any, ridx: number) => (
+                                  <li key={ridx}>
+                                    {res.title && <span className="font-semibold">{res.title}: </span>}
+                                    {res.link && <a href={res.link} className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">{res.link}</a>}
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {lesson.fileName && (
+                            <div className="mb-1">
+                              <span className="font-medium">Media:</span> {lesson.fileName} ({lesson.fileType}, {lesson.fileSize})
+                              {lesson.fileType === 'image' && lesson.filePreviewUrl && (
+                                <div className="mt-2"><img src={lesson.filePreviewUrl} alt={lesson.fileName} className="max-h-40 rounded" /></div>
+                              )}
+                              {lesson.fileType === 'video' && lesson.filePreviewUrl && (
+                                <div className="mt-2"><video src={lesson.filePreviewUrl} controls className="max-h-40 rounded" /></div>
+                              )}
+                              {lesson.fileType === 'pdf' && lesson.filePreviewUrl && (
+                                <div className="mt-2"><a href={lesson.filePreviewUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">View PDF</a></div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       ))
                     ) : (
