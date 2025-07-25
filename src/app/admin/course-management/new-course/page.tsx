@@ -1,24 +1,21 @@
 "use client"
 
-import { useState, useRef } from "react" // Import useState, useRef
+import { useState, useRef, useEffect } from "react" // Import useState, useRef
 import AdminSidebar from "@/components/AdminSidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ImageIcon, Plus, Minus, ArrowRight } from "lucide-react" // Import Plus and Minus icons
+import { ImageIcon, Plus, Minus, ArrowRight, ArrowLeft } from "lucide-react" // Import Plus and Minus icons
 import Link from "next/link"
+import { useRouter } from 'next/navigation';
 
 export default function AddNewCourse() {
-  const categories = [
-    "career skills",
-    "Money Matters",
-    "communication skills",
-    "personal growth",
-    "Digital Tools",
-    "professionalism",
-  ]
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
+  const [category, setCategory] = useState('');
 
   // State to manage learning objectives
   const [learningObjectives, setLearningObjectives] = useState<string[]>([""]) // Start with one empty objective
@@ -26,6 +23,38 @@ export default function AddNewCourse() {
   const [thumbnail, setThumbnail] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter();
+  useEffect(() => {
+    setCategoriesLoading(true);
+    setCategoriesError('');
+    fetch('http://localhost:3001/courses/categories')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch categories');
+        return res.json();
+      })
+      .then(data => setCategories(data))
+      .catch(() => setCategoriesError('Failed to fetch categories'))
+      .finally(() => setCategoriesLoading(false));
+  }, []);
+
+  // Course level and badges
+  const [level, setLevel] = useState('');
+  const [badges, setBadges] = useState<string[]>([]); // store selected badge ids
+  const [allBadges, setAllBadges] = useState<any[]>([]); // array of badge objects
+  const [badgesLoading, setBadgesLoading] = useState(true);
+  const [badgesError, setBadgesError] = useState('');
+  useEffect(() => {
+    setBadgesLoading(true);
+    setBadgesError('');
+    fetch('http://localhost:3001/badges')
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch badges');
+        return res.json();
+      })
+      .then(data => setAllBadges(data))
+      .catch(() => setBadgesError('Failed to fetch badges'))
+      .finally(() => setBadgesLoading(false));
+  }, []);
 
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,11 +103,21 @@ export default function AddNewCourse() {
 
       <main className="flex-1 p-8">
         <header className="mb-8">
+        <button
+          className="flex items-center gap-2 px-3 py-2 mb-6 bg-transparent text-gray-600 hover:bg-gray-100 rounded transition"
+          onClick={() => router.push('/admin/course-management')}
+          type="button"
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span>Back to Course Management</span>
+        </button>
           <h1 className="text-3xl font-bold mb-2">Upload New Course</h1>
           <p className="text-sm text-muted-foreground mb-6">
             Add course details to help students discover your course and understand what they will learn
           </p>
         </header>
+
+
 
         <section className="mb-8">
 
@@ -117,18 +156,16 @@ export default function AddNewCourse() {
                   >
                     Category
                   </label>
-                  <Select>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Select onValueChange={setCategory} value={category} required disabled={categoriesLoading || !!categoriesError}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={categoriesLoading ? "Loading categories..." : categoriesError ? "Failed to load categories" : "Select category"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 </div>
                 {/* Learning Objectives Section */}
                 <div className="space-y-2">
@@ -159,6 +196,46 @@ export default function AddNewCourse() {
                     <Plus className="h-4 w-4 mr-2" />
                     Add Objective
                   </Button>
+                </div>
+                {/* Course Level Section */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">Course Level</label>
+                  <Select value={level} onValueChange={setLevel} required>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Badges Section */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium leading-none">Badges</label>
+                  {badgesLoading ? (
+                    <div className="text-gray-500 text-sm">Loading badges...</div>
+                  ) : badgesError ? (
+                    <div className="text-red-500 text-sm">{badgesError}</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {allBadges.map((badge: any) => (
+                        <button
+                          key={badge.id}
+                          type="button"
+                          title={badge.description}
+                          className={`flex items-center gap-2 px-3 py-1 rounded-full border text-xs ${badges.includes(badge.id) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300'}`}
+                          onClick={() => setBadges(badges.includes(badge.id) ? badges.filter(b => b !== badge.id) : [...badges, badge.id])}
+                        >
+                          {badge.iconUrl && (
+                            <img src={badge.iconUrl} alt={badge.name} className="h-4 w-4 rounded-full" />
+                          )}
+                          {badge.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
