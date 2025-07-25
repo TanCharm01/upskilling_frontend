@@ -12,6 +12,7 @@ export function decodeJWT(token: string | null): {
   email?: string;
   avatar?: string;
   tagline?: string;
+  role?: string;
 } | null {
   if (!token) return null;
   try {
@@ -33,6 +34,7 @@ export function decodeJWT(token: string | null): {
       email: payload.email,
       avatar: payload.avatar,
       tagline: payload.tagline,
+      role: payload.role,
     };
   } catch (e) {
     return null;

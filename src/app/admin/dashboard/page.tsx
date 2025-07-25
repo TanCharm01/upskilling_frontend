@@ -341,7 +341,7 @@ export default function Dashboard() {
             <div className="flex space-x-3">
               <Button className="bg-[#0747A1] hover:bg-[#05316e] text-white flex items-center justify-center" onClick={() => setShowRegisterModal(true)}>
                 <User className="h-4 w-4 mr-2" />
-                Add New User
+                Add New Admin
               </Button>
               <Button className="bg-[#0747A1] hover:bg-[#05316e] text-white flex items-center justify-center">
                 <Plus className="h-4 w-4 mr-2" />
