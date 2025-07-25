@@ -113,6 +113,59 @@ function AdminRegisterModal({ open, onClose, onSuccess }: { open: boolean, onClo
   );
 }
 
+function UserProfileModal({ open, onClose, userId, userRole }: { open: boolean, onClose: () => void, userId: string | null, userRole: string | null }) {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    if (!open || !userId) return;
+    setLoading(true);
+    setError('');
+    let endpoint = '';
+    if (userRole && (normalize(userRole) === 'admin' || normalize(userRole) === 'superadmin')) {
+      endpoint = `http://localhost:3001/admins/profile/${userId}`;
+    } else {
+      endpoint = `http://localhost:3001/users/${userId}`;
+    }
+    fetch(endpoint)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch user profile');
+        return res.json();
+      })
+      .then(data => setUser(data))
+      .catch(() => setError('Failed to fetch user profile'))
+      .finally(() => setLoading(false));
+  }, [open, userId, userRole]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+      <div className="absolute inset-0" onClick={onClose} />
+      <div className="relative w-full max-w-md rounded-xl shadow-lg z-10 bg-white p-8">
+        <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-700" onClick={onClose} aria-label="Close">✕</button>
+        <h2 className="text-2xl font-bold mb-4 text-center">User Profile</h2>
+        {loading ? <div className="text-center text-gray-500">Loading...</div> : error ? <div className="text-center text-red-500">{error}</div> : user ? (
+          <div className="flex flex-col items-center gap-4">
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.fullname || user.firstname || user.name || 'User'} className="h-20 w-20 rounded-full object-cover" />
+            ) : (
+              <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center text-3xl font-bold text-gray-500">
+                {user.fullname ? user.fullname[0] : (user.firstname ? user.firstname[0] : '?')}
+              </div>
+            )}
+            <div className="text-lg font-semibold">{user.fullname || (user.firstname ? `${user.firstname} ${user.lastname}` : user.name)}</div>
+            <div className="text-gray-600">{user.email}</div>
+            {user.role && <div className="text-sm text-blue-700 bg-blue-100 rounded px-2 py-1 mt-1">{user.role}</div>}
+            {user.status && <div className="text-xs text-gray-400 mt-1">Status: {user.status}</div>}
+            {user.joinedDate && <div className="text-xs text-gray-400 mt-1">Joined: {user.joinedDate}</div>}
+            {user.lastActive && <div className="text-xs text-gray-400 mt-1">Last Active: {user.lastActive}</div>}
+            {user.tagline && <div className="text-sm text-gray-500 mt-2">{user.tagline}</div>}
+          </div>
+        ) : <div className="text-center text-gray-500">No user info available.</div>}
+      </div>
+    </div>
+  );
+}
+
 // Utility to normalize role strings (case-insensitive, space-insensitive)
 function normalize(str: string) {
   return str.toLowerCase().replace(/\s+|_+/g, '');
@@ -135,6 +188,17 @@ export default function UserManagement() {
   const [promoteLoadingId, setPromoteLoadingId] = useState<string | null>(null);
   const [promoteMessage, setPromoteMessage] = useState('');
   const [showPromoteToast, setShowPromoteToast] = useState(false);
+  const [showUserProfileModal, setShowUserProfileModal] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserRole, setSelectedUserRole] = useState<string | null>(null);
+  const [deactivateLoadingId, setDeactivateLoadingId] = useState<string | null>(null);
+  const [deactivateMessage, setDeactivateMessage] = useState('');
+  const [showDeactivateToast, setShowDeactivateToast] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, role: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState('');
+  const [showDeleteToast, setShowDeleteToast] = useState(false);
 
   // Filtering logic
   const filteredUsers = users.filter((user) => {
@@ -207,6 +271,28 @@ export default function UserManagement() {
       return () => clearTimeout(timer);
     }
   }, [promoteMessage]);
+
+  useEffect(() => {
+    if (deactivateMessage) {
+      setShowDeactivateToast(true);
+      const timer = setTimeout(() => {
+        setShowDeactivateToast(false);
+        setDeactivateMessage('');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [deactivateMessage]);
+
+  useEffect(() => {
+    if (deleteMessage) {
+      setShowDeleteToast(true);
+      const timer = setTimeout(() => {
+        setShowDeleteToast(false);
+        setDeleteMessage('');
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [deleteMessage]);
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -319,7 +405,7 @@ export default function UserManagement() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { setSelectedUserId(user.id); setSelectedUserRole(user.role); setShowUserProfileModal(true); }}>View</DropdownMenuItem>
                               {normalize(currentUserRole) === 'superadmin' && normalize(user.role) === 'admin' && (
                                 <DropdownMenuItem
                                   disabled={promoteLoadingId === user.id}
@@ -355,8 +441,94 @@ export default function UserManagement() {
                                   {promoteLoadingId === user.id ? 'Promoting...' : 'Make Super Admin'}
                                 </DropdownMenuItem>
                               )}
-                              <DropdownMenuItem>Deactivate</DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">Delete</DropdownMenuItem>
+                              {((normalize(user.role) === 'admin' || normalize(user.role) === 'superadmin')
+                                ? (user.active === false || user.status === 'Inactive' || user.status === 'INACTIVE')
+                                : (user.status === 'Inactive' || user.status === 'INACTIVE')) ? (
+                                <DropdownMenuItem
+                                  disabled={deactivateLoadingId === user.id}
+                                  onClick={async () => {
+                                    setDeactivateLoadingId(user.id);
+                                    setDeactivateMessage('');
+                                    try {
+                                      const adminToken = localStorage.getItem('admin_token');
+                                      let endpoint = '';
+                                      if (normalize(user.role) === 'admin' || normalize(user.role) === 'superadmin') {
+                                        endpoint = `http://localhost:3001/admins/reactivate-admin/${user.id}`;
+                                      } else {
+                                        endpoint = `http://localhost:3001/admins/reactivate-user/${user.id}`;
+                                      }
+                                      const res = await fetch(endpoint, {
+                                        method: 'PATCH',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${adminToken}`
+                                        }
+                                      });
+                                      const data = await res.json();
+                                      if (res.ok) {
+                                        setDeactivateMessage('User reactivated!');
+                                        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: 'Active', active: true } : u));
+                                      } else {
+                                        setDeactivateMessage(data.message || 'Failed to reactivate user.');
+                                      }
+                                    } catch {
+                                      setDeactivateMessage('Network error.');
+                                    } finally {
+                                      setDeactivateLoadingId(null);
+                                    }
+                                  }}
+                                >
+                                  {deactivateLoadingId === user.id ? 'Reactivating...' : 'Reactivate'}
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem
+                                  disabled={deactivateLoadingId === user.id}
+                                  onClick={async () => {
+                                    setDeactivateLoadingId(user.id);
+                                    setDeactivateMessage('');
+                                    try {
+                                      const adminToken = localStorage.getItem('admin_token');
+                                      let endpoint = '';
+                                      if (normalize(user.role) === 'admin' || normalize(user.role) === 'superadmin') {
+                                        endpoint = `http://localhost:3001/admins/deactivate-admin/${user.id}`;
+                                      } else {
+                                        endpoint = `http://localhost:3001/admins/deactivate-user/${user.id}`;
+                                      }
+                                      const res = await fetch(endpoint, {
+                                        method: 'PATCH',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${adminToken}`
+                                        }
+                                      });
+                                      const data = await res.json();
+                                      if (res.ok) {
+                                        setDeactivateMessage('User deactivated!');
+                                        setUsers(prev => prev.map(u => u.id === user.id ? { ...u, status: 'Inactive', active: false } : u));
+                                      } else {
+                                        setDeactivateMessage(data.message || 'Failed to deactivate user.');
+                                      }
+                                    } catch {
+                                      setDeactivateMessage('Network error.');
+                                    } finally {
+                                      setDeactivateLoadingId(null);
+                                    }
+                                  }}
+                                >
+                                  {deactivateLoadingId === user.id ? 'Deactivating...' : 'Deactivate'}
+                                </DropdownMenuItem>
+                              )}
+                              {normalize(currentUserRole) === 'superadmin' && (
+                                <DropdownMenuItem
+                                  className="text-red-600"
+                                  onClick={() => {
+                                    setDeleteTarget({ id: user.id, role: user.role });
+                                    setShowDeleteModal(true);
+                                  }}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -393,10 +565,74 @@ export default function UserManagement() {
         </section>
       </main>
       <AdminRegisterModal open={showRegisterModal} onClose={() => setShowRegisterModal(false)} />
+      <UserProfileModal open={showUserProfileModal} onClose={() => setShowUserProfileModal(false)} userId={selectedUserId} userRole={selectedUserRole} />
       {/* Promote Toast Popup */}
       {showPromoteToast && promoteMessage && (
         <div className="fixed top-6 right-6 z-50 bg-green-600 text-white px-6 py-3 rounded shadow-lg animate-fade-in">
           {promoteMessage}
+        </div>
+      )}
+      {/* Deactivate/Reactivate Toast Popup */}
+      {showDeactivateToast && deactivateMessage && (
+        <div className="fixed top-20 right-6 z-50 bg-blue-600 text-white px-6 py-3 rounded shadow-lg animate-fade-in">
+          {deactivateMessage}
+        </div>
+      )}
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="absolute inset-0" onClick={() => setShowDeleteModal(false)} />
+          <div className="relative w-full max-w-md rounded-xl shadow-lg z-10 bg-white p-8">
+            <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-700" onClick={() => setShowDeleteModal(false)} aria-label="Close">✕</button>
+            <h2 className="text-2xl font-bold mb-4 text-center text-red-600">Confirm Delete</h2>
+            <p className="text-center mb-6">Are you sure you want to delete this {normalize(deleteTarget.role)}? This action cannot be undone.</p>
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={() => setShowDeleteModal(false)} disabled={deleteLoading}>Cancel</Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={deleteLoading}
+                onClick={async () => {
+                  setDeleteLoading(true);
+                  setDeleteMessage('');
+                  try {
+                    const adminToken = localStorage.getItem('admin_token');
+                    let endpoint = '';
+                    if (normalize(deleteTarget.role) === 'admin' || normalize(deleteTarget.role) === 'superadmin') {
+                      endpoint = `http://localhost:3001/admins/${deleteTarget.id}`;
+                    } else {
+                      endpoint = `http://localhost:3001/users/${deleteTarget.id}`;
+                    }
+                    const res = await fetch(endpoint, {
+                      method: 'DELETE',
+                      headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                      }
+                    });
+                    if (res.ok) {
+                      setDeleteMessage('User deleted successfully!');
+                      setUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
+                      setShowDeleteModal(false);
+                    } else {
+                      const data = await res.json();
+                      setDeleteMessage(data.message || 'Failed to delete user.');
+                    }
+                  } catch {
+                    setDeleteMessage('Network error.');
+                  } finally {
+                    setDeleteLoading(false);
+                  }
+                }}
+              >
+                {deleteLoading ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Delete Toast Popup */}
+      {showDeleteToast && deleteMessage && (
+        <div className="fixed top-32 right-6 z-50 bg-red-600 text-white px-6 py-3 rounded shadow-lg animate-fade-in">
+          {deleteMessage}
         </div>
       )}
     </div>
