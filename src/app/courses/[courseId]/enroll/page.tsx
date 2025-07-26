@@ -337,28 +337,30 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
             </Card>
 
             {/* Instructor */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Instructor</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center mb-3">
-                  <Avatar className="h-12 w-12 mr-3">
-                    <AvatarImage src={course.instructor.avatar || "/placeholder.svg"} />
-                    <AvatarFallback>
-                      {course.instructor.name
-                        .split(" ")
-                        .map((n: string) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h4 className="font-medium">{course.instructor.name}</h4>
-                    <p className="text-sm text-gray-600">{course.instructor.bio}</p>
+            {course.instructor && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Instructor</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center mb-3">
+                    <Avatar className="h-12 w-12 mr-3">
+                      <AvatarImage src={course.instructor.avatar ? course.instructor.avatar : "/placeholder.svg"} />
+                      <AvatarFallback>
+                        {(course.instructor.name || "NA")
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h4 className="font-medium">{course.instructor.name || "Unknown"}</h4>
+                      <p className="text-sm text-gray-600">{course.instructor.bio || ""}</p>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Rewards */}
             <Card>

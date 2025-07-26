@@ -7,6 +7,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Edit } from "lucide-react"
 import Link from "next/link"
 import { CourseStatisticItem } from "@/components/course-statistic-item"
+import React, { useEffect, useState } from "react";
 
 // Dummy data for a specific course view
 const dummyCourseData = {
@@ -68,9 +69,36 @@ const dummyCourseData = {
   ],
 }
 
-export default function CourseViewPage({ params }: { params: { courseId: string } }) {
+export default function CourseViewPage({ params }: { params: Promise<{ courseId: string }> }) {
   // In a real app, you would fetch course data based on params.courseId
   const course = dummyCourseData // Using dummy data for now
+
+  // --- Statistics state and fetch logic ---
+  const [statistics, setStatistics] = useState<any>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [statsError, setStatsError] = useState<string | null>(null);
+
+  // Unwrap params Promise
+  const { courseId } = React.use(params);
+
+  useEffect(() => {
+    async function fetchStatistics() {
+      setStatsLoading(true);
+      setStatsError(null);
+      try {
+        const res = await fetch(`http://localhost:3001/courses/${courseId}/statistics`);
+        if (!res.ok) throw new Error("Failed to fetch statistics");
+        const data = await res.json();
+        setStatistics(data.statistics);
+      } catch (err: any) {
+        setStatsError(err.message || "Failed to fetch statistics");
+      } finally {
+        setStatsLoading(false);
+      }
+    }
+    fetchStatistics();
+  }, [courseId]);
+  // --- End statistics logic ---
 
   if (!course) {
     return (
@@ -96,16 +124,26 @@ export default function CourseViewPage({ params }: { params: { courseId: string 
         <section className="mb-8 max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 text-center">Course Statistics</h1>
 
-          <div className="flex items-center justify-center gap-8 mb-10">
-            <CourseStatisticItem label="Completion Rate" value={course.statistics.completionRate} />
-            <CourseStatisticItem label="Avg Rating" value={course.statistics.avgRating} />
-            <CourseStatisticItem label="Drop off Rate" value={course.statistics.dropOffRate} isLast />
-          </div>
-          <div className="flex items-center justify-center gap-8 mb-10">
-            <CourseStatisticItem label="Active Today" value={course.statistics.activeToday} />
-            <CourseStatisticItem label="Avg completion time" value={course.statistics.avgCompletionTime} />
-            <CourseStatisticItem label="Enrollments" value={course.statistics.enrollments} isLast />
-          </div>
+          {statsLoading ? (
+            <div className="text-center text-gray-500 mb-10">Loading statistics...</div>
+          ) : statsError ? (
+            <div className="text-center text-red-500 mb-10">{statsError}</div>
+          ) : statistics ? (
+            <>
+              <div className="flex items-center justify-center gap-8 mb-10">
+                <CourseStatisticItem label="Completion Rate" value={statistics.completionRate} />
+                <CourseStatisticItem label="Avg Rating" value={statistics.avgRating} />
+                <CourseStatisticItem label="In Progress" value={statistics.dropOffRate} isLast />
+              </div>
+              <div className="flex items-center justify-center gap-8 mb-10">
+                <CourseStatisticItem label="Active Today" value={statistics.activeToday} />
+                <CourseStatisticItem label="Avg completion time" value={statistics.avgCompletionTime} />
+                <CourseStatisticItem label="Enrollments" value={statistics.enrollments} isLast />
+              </div>
+            </>
+          ) : (
+            <div className="text-center text-gray-500 mb-10">No statistics available.</div>
+          )}
 
           <h1 className="text-3xl font-bold mb-6 text-center">Course Overview</h1>
 
