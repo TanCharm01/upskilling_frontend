@@ -68,21 +68,39 @@ export default function FinalAssessmentPage() {
       setLoading(true);
       setError("");
       try {
-        if (!assessmentId || !userId) return;
-        // Use the correct API endpoint
-        const res = await fetch(`http://localhost:3001/final-assessments/user/${userId}/${assessmentId}`);
+        if (!courseId || !userId) return;
+        const res = await fetch(`http://localhost:3001/final-assessments/course/${courseId}/user/${userId}/random`);
         if (!res.ok) throw new Error("Failed to fetch final assessment");
         const data = await res.json();
-        setAssessment(data.assessment);
-        setAnswers(Array(data.assessment.questions.length).fill(""));
+        setAssessment(data);
+        setAnswers(Array(data.questions.length).fill(""));
       } catch (err: any) {
         setError(err.message || "Failed to fetch final assessment");
       } finally {
         setLoading(false);
       }
     }
-    if (assessmentId && userId) fetchAssessment();
-  }, [assessmentId, userId]);
+    if (courseId && userId) fetchAssessment();
+  }, [courseId, userId]);
+
+  // Function to fetch a new randomized assessment
+  const fetchRandomAssessment = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      if (!courseId || !userId) return;
+      const res = await fetch(`http://localhost:3001/final-assessments/course/${courseId}/user/${userId}/random`);
+      if (!res.ok) throw new Error("Failed to fetch final assessment");
+      const data = await res.json();
+      setAssessment(data);
+      setAnswers(Array(data.questions.length).fill(""));
+      setResults(null);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch final assessment");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (idx: number, value: string) => {
     const newAnswers = [...answers];
@@ -181,10 +199,7 @@ export default function FinalAssessmentPage() {
                 <button
                   type="button"
                   className="px-6 py-2 bg-yellow-500 text-white rounded font-semibold"
-                  onClick={() => {
-                    setAnswers(Array(assessment.questions.length).fill(""));
-                    setResults(null);
-                  }}
+                  onClick={fetchRandomAssessment}
                 >
                   Retake Assessment
                 </button>
