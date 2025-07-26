@@ -7,6 +7,7 @@ import { Edit } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import NotificationModal from '@/components/ui/NotificationModal';
 
 function getCourseData() {
   if (typeof window === 'undefined') return null;
@@ -28,15 +29,120 @@ function getModulesData() {
   }
 }
 
+// Utility: Transform localStorage data to API payload for /courses/create-with-modules-lessons
+export function transformCourseDataForApi(localData: any, userId: string) {
+  return {
+    title: localData.title,
+    category: localData.category,
+    description: localData.description,
+    duration: localData.modules
+      ? localData.modules.reduce((sum: number, m: any) => sum + (m.duration || 0), 0)
+      : 0,
+    createdById: userId,
+    thumbnailUrl: localData.previewUrl,
+    isPublished: true,
+    objectives: localData.learningObjectives,
+    searchTags: localData.searchTags || [],
+    badgeNames: localData.badges,
+    badgeIds: localData.badgeIds,
+    level: localData.level,
+    hasCertificate: true, // or from your UI
+    modules: (localData.modules || []).map((mod: any, mIdx: number) => ({
+      title: mod.title,
+      order: mIdx + 1,
+      duration: mod.lessons
+        ? mod.lessons.reduce((sum: number, l: any) => sum + (parseInt(l.duration) || 0), 0)
+        : 0,
+      lessons: (mod.lessons || []).map((lesson: any, lIdx: number) => ({
+        title: lesson.title,
+        content: lesson.notes || "",
+        mediaUrl: lesson.filePreviewUrl || "",
+        transcript: lesson.transcript || [], // Fill if you have transcript data
+        notes: lesson.notes
+          ? [{ title: "Notes", content: lesson.notes }]
+          : [],
+        resources: (lesson.additionalResources || []).map((res: any) => ({
+          title: res.title,
+          description: res.description || "",
+          url: res.link,
+          type: res.type || "article"
+        })),
+        duration: parseInt(lesson.duration) || 0,
+        type: lesson.fileType || "VIDEO",
+        order: lIdx + 1
+      }))
+    }))
+  };
+}
+
+// Example usage (uncomment to use):
+// const userId = "user-uuid-123";
+// const localData = JSON.parse(localStorage.getItem('newCourseData') || '{}');
+// localData.modules = JSON.parse(localStorage.getItem('newModulesData') || '[]');
+// const payload = transformCourseDataForApi(localData, userId);
+// fetch('/courses/create-with-modules-lessons', {
+//   method: 'POST',
+//   headers: { 'Content-Type': 'application/json' },
+//   body: JSON.stringify(payload)
+// }).then(res => res.json()).then(data => { /* handle success */ });
+
 export default function CoursePreview() {
   const router = useRouter();
   const [courseData, setCourseData] = useState<any>(null);
   const [modulesData, setModulesData] = useState<any[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalColor, setModalColor] = useState<string|undefined>(undefined);
+  // Extract userId from JWT token's 'sub' field
+  function parseJwt(token: string) {
+    try {
+      return JSON.parse(atob(token.split('.')[1]));
+    } catch (e) {
+      return null;
+    }
+  }
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const payload = token ? parseJwt(token) : null;
+  const userId = payload?.sub;
 
   useEffect(() => {
     setCourseData(getCourseData());
     setModulesData(getModulesData());
   }, []);
+
+  async function handleCreateCourse() {
+    try {
+      if (!userId) {
+        setModalMessage('User not authenticated. Please log in.');
+        setModalColor('red');
+        setModalOpen(true);
+        return;
+      }
+      const localData = JSON.parse(localStorage.getItem('newCourseData') || '{}');
+      localData.modules = JSON.parse(localStorage.getItem('newModulesData') || '[]');
+      const payload = transformCourseDataForApi(localData, userId);
+      const res = await fetch('http://localhost:3001/courses/create-with-modules-lessons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (res.ok) {
+        setModalMessage('Course created successfully!');
+        setModalColor('green');
+        setModalOpen(true);
+        // Optionally, redirect or clear localStorage after a delay
+      } else {
+        const err = await res.json();
+        setModalMessage('Failed to create course: ' + (err.message || res.status));
+        setModalColor('red');
+        setModalOpen(true);
+      }
+    } catch (e: any) {
+      setModalMessage('Error: ' + (e.message || 'Unknown error'));
+      setModalColor('red');
+      setModalOpen(true);
+    }
+  }
 
   // Fallback dummy data if nothing in storage
   const dummyCourseData = {
@@ -160,7 +266,7 @@ export default function CoursePreview() {
           </Accordion>
 
           <div className="flex justify-center space-x-4 mt-10">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">Publish Course</Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleCreateCourse}>Create Course</Button>
             <Button variant="outline" className="bg-transparent flex items-center justify-center gap-2" onClick={() => router.back()}>
               <Edit className="h-4 w-4" />
               <span>Back to edit course</span>
@@ -168,6 +274,7 @@ export default function CoursePreview() {
           </div>
         </section>
       </main>
+      <NotificationModal open={modalOpen} onClose={() => setModalOpen(false)} message={modalMessage} color={modalColor} />
     </div>
   )
 }
