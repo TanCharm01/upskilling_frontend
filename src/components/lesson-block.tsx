@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
+import { Select } from "@/components/ui/select"
 import { File, Trash, ImageIcon, Video, FileText, Plus, Minus, X } from "lucide-react" // Import X icon for delete
 
 interface LessonBlockProps {
@@ -31,11 +32,13 @@ export function LessonBlock({ lessonNumber, lesson, onChange, onDelete }: Lesson
       if (file.type.startsWith('image/')) fileType = 'image';
       else if (file.type.startsWith('video/')) fileType = 'video';
       else if (file.type === 'application/pdf') fileType = 'pdf';
+      else if (file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') fileType = 'doc';
       onChange({
         ...lesson,
         fileName: file.name,
         fileSize: (file.size / 1024 / 1024).toFixed(1) + 'MB',
         fileType,
+        type: fileType === 'other' ? (lesson.type || 'video') : fileType,
         filePreviewUrl: url,
       });
     }
@@ -133,6 +136,24 @@ export function LessonBlock({ lessonNumber, lesson, onChange, onDelete }: Lesson
                 value={lesson.title || ''}
                 onChange={e => handleFieldChange('title', e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor={`lesson-type-${lessonNumber}`} className="text-sm font-medium">
+                Lesson Type
+              </label>
+              <select
+                id={`lesson-type-${lessonNumber}`}
+                className="w-full border rounded px-2 py-1"
+                value={lesson.type || 'video'}
+                onChange={e => handleFieldChange('type', e.target.value)}
+              >
+                <option value="video">Video</option>
+                <option value="reading">Reading</option>
+                <option value="quiz">Quiz</option>
+                <option value="pdf">PDF</option>
+                <option value="doc">DOC</option>
+                <option value="image">Image</option>
+              </select>
             </div>
             <div className="space-y-2">
               <label htmlFor={`lesson-notes-${lessonNumber}`} className="text-sm font-medium">

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 // import { AppSidebar } from "@/components/app-sidebar"
 import AdminSidebar from "@/components/AdminSidebar"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Plus, ArrowLeft, ArrowRight, X } from "lucide-react" // Import X icon for module delete
 import Link from "next/link"
 import { LessonBlock } from "@/components/lesson-block"
@@ -13,7 +15,7 @@ import NotificationModal from '@/components/ui/NotificationModal';
 
 export default function UploadCourseContent() {
   const router = useRouter();
-  const [modules, setModules] = useState([{ id: 1, lessons: [{ id: 1 }] }]);
+  const [modules, setModules] = useState([{ id: 1, title: '', description: '', lessons: [{ id: 1 }] }]);
   const [nextModuleId, setNextModuleId] = useState(2);
   const [nextLessonId, setNextLessonId] = useState(2);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -90,7 +92,7 @@ export default function UploadCourseContent() {
   }
 
   const handleAddModule = () => {
-    setModules([...modules, { id: nextModuleId, lessons: [{ id: nextLessonId }] }]);
+    setModules([...modules, { id: nextModuleId, title: '', description: '', lessons: [{ id: nextLessonId }] }]);
     setNextModuleId(nextModuleId + 1);
     setNextLessonId(nextLessonId + 1);
     markDirty();
@@ -124,6 +126,20 @@ export default function UploadCourseContent() {
     markDirty();
   }
 
+  const handleModuleTitleChange = (moduleId: number, title: string) => {
+    setModules(modules.map(module => 
+      module.id === moduleId ? { ...module, title } : module
+    ));
+    markDirty();
+  }
+
+  const handleModuleDescriptionChange = (moduleId: number, description: string) => {
+    setModules(modules.map(module => 
+      module.id === moduleId ? { ...module, description } : module
+    ));
+    markDirty();
+  }
+
   const handlePreviewAndPublish = () => {
     handleSave();
     router.push('/admin/course-management/course-preview');
@@ -135,7 +151,7 @@ export default function UploadCourseContent() {
 
       <main className="flex-1 p-8">
         <header className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-500">Course Content additional lesson</h2>
+          <h2 className="text-lg font-semibold text-gray-500">Course Content Creation</h2>
         </header>
 
         <section className="mb-8">
@@ -156,7 +172,22 @@ export default function UploadCourseContent() {
           {modules.map((module, moduleIndex) => (
             <div key={module.id} className="mb-8 p-6 border rounded-lg bg-gray-50">
               <CardHeader className="flex flex-row items-center justify-between p-0 pb-4">
-                <CardTitle className="text-2xl font-bold">Module {moduleIndex + 1}</CardTitle>
+                <div className="flex flex-col space-y-2">
+                  <CardTitle className="text-2xl font-bold">Module {moduleIndex + 1}</CardTitle>
+                  <Input
+                    placeholder="Enter module title..."
+                    value={module.title || ''}
+                    onChange={(e) => handleModuleTitleChange(module.id, e.target.value)}
+                    className="w-150"
+                  />
+                  <Textarea
+                    placeholder="Enter module description..."
+                    value={module.description || ''}
+                    onChange={(e) => handleModuleDescriptionChange(module.id, e.target.value)}
+                    className="w-150"
+                    rows={3}
+                  />
+                </div>
                 {modules.length > 1 && (
                   <Button
                     variant="outline"
@@ -233,7 +264,7 @@ export default function UploadCourseContent() {
               className="mt-4 border-red-500 text-red-600 hover:bg-red-50 hover:border-red-600"
               onClick={() => {
                 localStorage.removeItem('newModulesData');
-                setModules([{ id: 1, lessons: [{ id: 1 }] }]);
+                setModules([{ id: 1, title: '', description: '', lessons: [{ id: 1 }] }]);
                 setNextModuleId(2);
                 setNextLessonId(2);
                 setHasUnsavedChanges(false);

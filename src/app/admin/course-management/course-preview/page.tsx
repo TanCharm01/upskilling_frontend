@@ -49,6 +49,7 @@ export function transformCourseDataForApi(localData: any, userId: string) {
     hasCertificate: true, // or from your UI
     modules: (localData.modules || []).map((mod: any, mIdx: number) => ({
       title: mod.title,
+      description: mod.description,
       order: mIdx + 1,
       duration: mod.lessons
         ? mod.lessons.reduce((sum: number, l: any) => sum + (parseInt(l.duration) || 0), 0)
@@ -68,7 +69,7 @@ export function transformCourseDataForApi(localData: any, userId: string) {
           type: res.type || "article"
         })),
         duration: parseInt(lesson.duration) || 0,
-        type: lesson.fileType || "VIDEO",
+        type: (lesson.type || 'video').toLowerCase(),
         order: lIdx + 1
       }))
     }))
@@ -145,19 +146,19 @@ export default function CoursePreview() {
   }
 
   // Fallback dummy data if nothing in storage
-  const dummyCourseData = {
-    title: "Building A Growth Mindset",
-    lessonsCount: 24,
-    totalDuration: "1 hr 30 min",
-    description:
-      "This comprehensive course offers an in-depth exploration of [subject/topic area], designed for learners at all levels. Whether you're a beginner looking to build a strong foundation or an experienced professional seeking to refine your skills, this course provides the tools and insights you need to succeed. You'll learn practical strategies, engage with interactive exercises, and gain a deeper understanding of key concepts. Our expert instructors guide you through each module, ensuring a clear and engaging learning experience. Prepare to transform your approach and achieve your goals with this essential course.",
-    learningObjectives: [
-      "Understand the core principles of a growth mindset.",
-      "Differentiate between fixed and growth mindsets.",
-      "Develop strategies for embracing challenges and learning from failure.",
-      "Set effective growth-oriented goals.",
-      "Implement daily practices to foster a growth mindset.",
-    ],
+const dummyCourseData = {
+  title: "Building A Growth Mindset",
+  lessonsCount: 24,
+  totalDuration: "1 hr 30 min",
+  description:
+    "This comprehensive course offers an in-depth exploration of [subject/topic area], designed for learners at all levels. Whether you're a beginner looking to build a strong foundation or an experienced professional seeking to refine your skills, this course provides the tools and insights you need to succeed. You'll learn practical strategies, engage with interactive exercises, and gain a deeper understanding of key concepts. Our expert instructors guide you through each module, ensuring a clear and engaging learning experience. Prepare to transform your approach and achieve your goals with this essential course.",
+  learningObjectives: [
+    "Understand the core principles of a growth mindset.",
+    "Differentiate between fixed and growth mindsets.",
+    "Develop strategies for embracing challenges and learning from failure.",
+    "Set effective growth-oriented goals.",
+    "Implement daily practices to foster a growth mindset.",
+  ],
     modules: [],
     previewUrl: null,
   };
@@ -205,7 +206,7 @@ export default function CoursePreview() {
           <ul className="list-disc list-inside text-muted-foreground mb-8 space-y-1">
             {displayCourse.learningObjectives && displayCourse.learningObjectives.length > 0
               ? displayCourse.learningObjectives.map((objective: string, index: number) => (
-                  <li key={index}>{objective}</li>
+              <li key={index}>{objective}</li>
                 ))
               : <li>No objectives provided.</li>}
           </ul>
@@ -252,13 +253,13 @@ export default function CoursePreview() {
                               )}
                             </div>
                           )}
-                        </div>
+                    </div>
                       ))
                     ) : (
                       <div className="text-muted-foreground">No lessons</div>
                     )}
-                  </AccordionContent>
-                </AccordionItem>
+                </AccordionContent>
+              </AccordionItem>
               ))
             ) : (
               <div className="text-muted-foreground px-4 py-2">No modules added.</div>
@@ -268,9 +269,9 @@ export default function CoursePreview() {
           <div className="flex justify-center space-x-4 mt-10">
             <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleCreateCourse}>Create Course</Button>
             <Button variant="outline" className="bg-transparent flex items-center justify-center gap-2" onClick={() => router.back()}>
-              <Edit className="h-4 w-4" />
+                <Edit className="h-4 w-4" />
               <span>Back to edit course</span>
-            </Button>
+              </Button>
           </div>
         </section>
       </main>
