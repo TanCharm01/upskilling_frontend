@@ -165,21 +165,176 @@ export default function CourseViewPage({ params }: { params: Promise<{ courseId:
           <Accordion type="single" collapsible className="w-full">
             {course.modules?.map((module: any) => (
               <AccordionItem key={module.id} value={module.id} className="border-b">
-                <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                  {module.title}
-                  {module.description && (
-                    <span className="text-sm text-gray-500 ml-2">({module.description})</span>
-                  )}
+                <AccordionTrigger className="text-lg font-semibold hover:no-underline flex justify-between items-start">
+                  <div className="flex flex-col items-start">
+                    <div>{module.title}</div>
+                    {module.description && (
+                      <div className="text-sm text-gray-500 font-normal">{module.description}</div>
+                    )}
+                  </div>
                 </AccordionTrigger>
                 <AccordionContent className="pl-4 py-2 space-y-2">
-                  {module.lessons?.map((lesson: any) => (
-                    <div key={lesson.id} className="text-muted-foreground">
-                      <div className="font-medium">{lesson.title}</div>
-                      {lesson.content && (
-                        <div className="text-sm text-gray-500 mt-1">{lesson.content.substring(0, 100)}...</div>
-                      )}
-                    </div>
-                  )) || <div className="text-gray-500">No lessons in this module.</div>}
+                  <Accordion type="single" collapsible className="w-full">
+                    {module.lessons?.map((lesson: any) => (
+                      <AccordionItem key={lesson.id} value={lesson.id} className="border-b border-gray-100">
+                        <AccordionTrigger className="text-sm font-medium hover:no-underline flex justify-between items-start">
+                          <div className="flex flex-col items-start">
+                            <div>{lesson.title}</div>
+                            {lesson.duration && (
+                              <div className="text-xs text-gray-500 font-normal">{lesson.duration} minutes</div>
+                            )}
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pl-4 py-2 space-y-3">
+                          {lesson.content && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2">Content:</h4>
+                              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{lesson.content}</div>
+                            </div>
+                          )}
+                          {lesson.mediaUrl && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2">Media:</h4>
+                              <div className="text-sm text-gray-600">
+                                {lesson.type === 'video' ? (
+                                  <video src={lesson.mediaUrl} controls className="max-w-full h-auto rounded" />
+                                ) : lesson.type === 'image' ? (
+                                  <img src={lesson.mediaUrl} alt={lesson.title} className="max-w-full h-auto rounded" />
+                                ) : (
+                                  <a href={lesson.mediaUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                    View Media File
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          {lesson.notes && lesson.notes.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2">Notes:</h4>
+                              <div className="space-y-2">
+                                {lesson.notes.map((note: any, noteIndex: number) => (
+                                  <div key={noteIndex} className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                                    <div className="font-medium">{note.title}</div>
+                                    <div className="mt-1">{note.content}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {lesson.resources && lesson.resources.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2">Resources:</h4>
+                              <div className="space-y-2">
+                                {lesson.resources.map((resource: any, resourceIndex: number) => (
+                                  <div key={resourceIndex} className="text-sm text-gray-600">
+                                    <div className="font-medium">{resource.title}</div>
+                                    {resource.description && (
+                                      <div className="text-gray-500">{resource.description}</div>
+                                    )}
+                                    <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-xs">
+                                      {resource.url}
+                                    </a>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {lesson.transcript && lesson.transcript.length > 0 && (
+                            <div>
+                              <h4 className="text-sm font-semibold text-gray-700 mb-2">Transcript:</h4>
+                              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded max-h-32 overflow-y-auto">
+                                {lesson.transcript.map((line: any, transcriptIndex: number) => (
+                                  <div key={transcriptIndex} className="mb-1">
+                                    <span className="font-medium">{line.speaker ? `${line.speaker}:` : ''}</span> {line.text || line}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+                    )) || <div className="text-gray-500">No lessons in this module.</div>}
+                  </Accordion>
+                 {/* Quizzes Section */}
+                 {module.quizzes && module.quizzes.length > 0 && (
+                   <div className="mt-4">
+                     <h4 className="text-base font-semibold text-purple-700 mb-2">Quizzes</h4>
+                     <Accordion type="single" collapsible className="w-full">
+                       {module.quizzes.map((quiz: any) => (
+                         <AccordionItem key={quiz.id} value={quiz.id} className="border-b border-gray-100">
+                           <AccordionTrigger className="text-sm font-medium hover:no-underline flex justify-between items-start">
+                             <div className="flex flex-col items-start">
+                               <div>{quiz.title}</div>
+                               {quiz.duration !== undefined && (
+                                 <div className="text-xs text-gray-500 font-normal">{quiz.duration} minutes</div>
+                               )}
+                               {quiz.unlockAfter !== undefined && (
+                                 <div className="text-xs text-gray-500 font-normal">Unlock After: {quiz.unlockAfter} lessons</div>
+                               )}
+                             </div>
+                           </AccordionTrigger>
+                           <AccordionContent className="pl-4 py-2 space-y-3">
+                             {quiz.questions && quiz.questions.length > 0 ? (
+                               <div>
+                                 <h5 className="text-sm font-semibold text-gray-700 mb-2">Questions:</h5>
+                                 <ol className="list-decimal list-inside space-y-2">
+                                   {quiz.questions.map((q: any, qidx: number) => (
+                                     <li key={q.id || qidx}>
+                                       <div className="font-medium">{q.prompt}</div>
+                                       {q.sampleAnswer && (
+                                         <div className="text-xs text-gray-500 mt-1">Sample Answer: {q.sampleAnswer}</div>
+                                       )}
+                                     </li>
+                                   ))}
+                                 </ol>
+                               </div>
+                             ) : <div className="text-gray-500">No questions in this quiz.</div>}
+                           </AccordionContent>
+                         </AccordionItem>
+                       ))}
+                     </Accordion>
+                   </div>
+                 )}
+                 {/* Final Assessments Section (at course level, show after lessons/quizzes in first module only) */}
+                 {module === course.modules[0] && course.finalAssessments && course.finalAssessments.length > 0 && (
+                   <div className="mt-4">
+                     <h4 className="text-base font-semibold text-green-700 mb-2">Final Assessments</h4>
+                     <Accordion type="single" collapsible className="w-full">
+                       {course.finalAssessments.map((fa: any) => (
+                         <AccordionItem key={fa.id} value={fa.id} className="border-b border-gray-100">
+                           <AccordionTrigger className="text-sm font-medium hover:no-underline flex justify-between items-start">
+                             <div className="flex flex-col items-start">
+                               <div>{fa.title}</div>
+                               {fa.duration !== undefined && (
+                                 <div className="text-xs text-gray-500 font-normal">{fa.duration} minutes</div>
+                               )}
+                               {fa.passingScore !== undefined && (
+                                 <div className="text-xs text-gray-500 font-normal">Passing Score: {fa.passingScore}%</div>
+                               )}
+                             </div>
+                           </AccordionTrigger>
+                           <AccordionContent className="pl-4 py-2 space-y-3">
+                             {fa.questions && fa.questions.length > 0 ? (
+                               <div>
+                                 <h5 className="text-sm font-semibold text-gray-700 mb-2">Questions:</h5>
+                                 <ol className="list-decimal list-inside space-y-2">
+                                   {fa.questions.map((q: any, qidx: number) => (
+                                     <li key={q.id || qidx}>
+                                       <div className="font-medium">{q.prompt}</div>
+                                       {q.sampleAnswer && (
+                                         <div className="text-xs text-gray-500 mt-1">Sample Answer: {q.sampleAnswer}</div>
+                                       )}
+                                     </li>
+                                   ))}
+                                 </ol>
+                               </div>
+                             ) : <div className="text-gray-500">No questions in this assessment.</div>}
+                           </AccordionContent>
+                         </AccordionItem>
+                       ))}
+                     </Accordion>
+                   </div>
+                 )}
                 </AccordionContent>
               </AccordionItem>
             )) || <div className="text-gray-500">No modules available.</div>}
