@@ -261,7 +261,10 @@ export default function AdminAuthPage() {
       const res = await fetch("http://localhost:3001/auth/resend-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: otpEmail })
+        body: JSON.stringify({ 
+          email: otpEmail,
+          purpose: otpType === 'verification' ? 'signup' : 'reset'
+        })
       });
       const data = await res.json();
       if (res.ok) {

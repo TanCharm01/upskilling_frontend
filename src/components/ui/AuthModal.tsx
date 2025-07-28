@@ -78,6 +78,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
   const [otp, setOtp] = useState("");
   const [otpEmail, setOtpEmail] = useState("");
   const [otpType, setOtpType] = useState<'verification' | 'reset'>('verification');
+  const [verificationMode, setVerificationMode] = useState<'signup' | 'signin'>('signup');
   
   // Password reset state
   const [resetEmail, setResetEmail] = useState("");
@@ -152,6 +153,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
         // Email not verified, show OTP verification
         setOtpEmail(trimmedEmail);
         setOtpType('verification');
+        setVerificationMode('signin');
         setStep('otp');
         setSuccess("Please verify your email with the OTP sent to your inbox.");
         startCountdown();
@@ -194,6 +196,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
       if (res.ok) {
         setOtpEmail(trimmedEmail);
         setOtpType('verification');
+        setVerificationMode('signup');
         setStep('otp');
         setSuccess("Registration successful! Please verify your email with the OTP sent to your inbox.");
         startCountdown();
@@ -286,7 +289,10 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
       const res = await fetch("http://localhost:3001/auth/resend-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: otpEmail })
+        body: JSON.stringify({ 
+          email: otpEmail,
+          purpose: otpType === 'verification' ? verificationMode : 'reset'
+        })
       });
       const data = await res.json();
       if (res.ok) {
@@ -405,6 +411,9 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
   const goBack = () => {
     setStep('form');
     setOtp("");
+    setOtpEmail("");
+    setOtpType('verification');
+    setVerificationMode('signup');
     setError("");
     setSuccess("");
     setCountdown(0);
