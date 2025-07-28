@@ -234,26 +234,26 @@ export default function AdminUploadPage() {
             <h2 className="text-lg font-semibold text-gray-500">Assessment Management</h2>
           </header>
           
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Assessment Upload Center</h1>
-            <p className="text-muted-foreground">Upload Final Assessments and Quizzes for your courses</p>
-          </div>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Assessment Upload Center</h1>
+        <p className="text-muted-foreground">Upload Final Assessments and Quizzes for your courses</p>
+      </div>
 
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <div className="bg-white rounded-lg shadow-sm border mb-6">
               <TabsList className="grid w-full grid-cols-2 p-1">
                 <TabsTrigger value="final" className="flex items-center gap-2 py-3">
-                  <Target className="w-4 h-4" />
-                  Final Assessment
-                </TabsTrigger>
+            <Target className="w-4 h-4" />
+            Final Assessment
+          </TabsTrigger>
                 <TabsTrigger value="quiz" className="flex items-center gap-2 py-3">
-                  <BookOpen className="w-4 h-4" />
-                  Quiz
-                </TabsTrigger>
-              </TabsList>
+            <BookOpen className="w-4 h-4" />
+            Quiz
+          </TabsTrigger>
+        </TabsList>
             </div>
 
-          <TabsContent value="final">
+        <TabsContent value="final">
           <Card className="shadow-sm border-0 bg-white">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -279,9 +279,9 @@ export default function AdminUploadPage() {
                         <div className="p-2 text-gray-500">No courses found</div>
                       ) : (
                         courses.map((course) => (
-                          <SelectItem key={course.id} value={course.id}>
+                        <SelectItem key={course.id} value={course.id}>
                             {course.title || course.name}
-                          </SelectItem>
+                        </SelectItem>
                         ))
                       )}
                     </SelectContent>
@@ -360,9 +360,9 @@ export default function AdminUploadPage() {
                         <div className="p-2 text-gray-500">No courses found</div>
                       ) : (
                         courses.map((course) => (
-                          <SelectItem key={course.id} value={course.id}>
+                        <SelectItem key={course.id} value={course.id}>
                             {course.title || course.name}
-                          </SelectItem>
+                        </SelectItem>
                         ))
                       )}
                     </SelectContent>
@@ -387,9 +387,9 @@ export default function AdminUploadPage() {
                         <div className="p-2 text-gray-500">No modules found</div>
                       ) : (
                         modules.map((module) => (
-                          <SelectItem key={module.id} value={module.id}>
+                        <SelectItem key={module.id} value={module.id}>
                             {module.title || module.name}
-                          </SelectItem>
+                        </SelectItem>
                         ))
                       )}
                     </SelectContent>

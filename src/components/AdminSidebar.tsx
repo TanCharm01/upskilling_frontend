@@ -42,13 +42,13 @@ const AdminSidebar = () => {
           <User className="h-5 w-5" />
           <span>Profile</span>
         </Link>
-        <button
-          className="flex items-center space-x-2 p-3 rounded-lg w-full text-left bg-red-100 text-red-700 font-medium hover:bg-red-200 transition-colors mt-2"
+        <div
+          className="flex items-center space-x-2 p-3 rounded-lg w-full text-left bg-red-100 text-red-700 font-medium hover:bg-red-200 transition-colors mt-2 cursor-pointer"
           onClick={handleLogout}
         >
           <LogOut className="h-5 w-5" />
           <span>Logout</span>
-        </button>
+        </div>
       </nav>
     </aside>
   );

@@ -184,7 +184,7 @@ function AdminRegisterModal({ open, onClose, onSuccess }: { open: boolean, onClo
       return;
     }
     try {
-      const res = await fetch('http://localhost:3001/admin/auth/register', {
+      const res = await fetch('http://localhost:3001/auth/admin/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

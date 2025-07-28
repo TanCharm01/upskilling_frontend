@@ -9,6 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export function decodeJWT(token: string | null): {
   id?: string;
   firstname?: string;
+  lastname?: string;
   email?: string;
   avatar?: string;
   tagline?: string;
@@ -31,6 +32,7 @@ export function decodeJWT(token: string | null): {
     return {
       id: payload.id || payload.sub || payload.userId,
       firstname: payload.firstname,
+      lastname: payload.lastname,
       email: payload.email,
       avatar: payload.avatar,
       tagline: payload.tagline,

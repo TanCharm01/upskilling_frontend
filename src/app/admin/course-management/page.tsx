@@ -153,57 +153,133 @@ function useCourseManagementData() {
 
 function CourseManagementTable({ searchTerm }: { searchTerm: string }) {
   const { courses, loading, error } = useCourseManagementData();
-  const filteredCourses = courses.filter((course: any) =>
+  const [deleteLoading, setDeleteLoading] = useState<{ [key: string]: boolean }>({});
+  const [showDeleteModal, setShowDeleteModal] = useState<{ [key: string]: boolean }>({});
+  const [coursesData, setCoursesData] = useState<any[]>([]);
+  const router = useRouter();
+
+  // Update local courses data when API data changes
+  useEffect(() => {
+    if (courses.length > 0) {
+      setCoursesData(courses);
+    }
+  }, [courses]);
+
+  const handleDeleteCourse = async (courseId: string) => {
+    setDeleteLoading(prev => ({ ...prev, [courseId]: true }));
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await fetch(`http://localhost:3001/courses/${courseId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete course');
+      }
+
+      // Remove the course from local state
+      setCoursesData(prev => prev.filter(course => course.id !== courseId));
+      setShowDeleteModal(prev => ({ ...prev, [courseId]: false }));
+    } catch (error) {
+      console.error('Error deleting course:', error);
+      alert('Failed to delete course. Please try again.');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [courseId]: false }));
+    }
+  };
+
+  const filteredCourses = coursesData.filter((course: any) =>
     course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     course.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
   if (loading) return <div className="p-8 text-center">Loading courses...</div>;
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students Enrolled</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published</th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {filteredCourses.map((course: any) => (
-            <tr key={course.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-700 hover:underline cursor-pointer">
-                <a href={`/admin/course-management/${course.id}`}>{course.name}</a>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{course.category}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{course.studentsEnrolled}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{course.lastUpdated}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                {course.published ? (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Published</span>
-                ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Draft</span>
-                )}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => window.location.href = `/admin/course-management/${course.id}`}>
-                    <Edit className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  <Button variant="outline">
-                    <Trash className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
-                </div>
-              </td>
+    <>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course Name</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students Enrolled</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Published</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredCourses.map((course: any) => (
+              <tr key={course.id}>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-700 hover:underline cursor-pointer">
+                  <a href={`/admin/course-management/${course.id}`}>{course.name}</a>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{course.category}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{course.studentsEnrolled}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{course.lastUpdated}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {course.published ? (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Published</span>
+                  ) : (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Draft</span>
+                  )}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div className="flex justify-end gap-2">
+                    <Button variant="outline" onClick={() => window.location.href = `/admin/course-management/${course.id}`}>
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowDeleteModal(prev => ({ ...prev, [course.id]: true }))}
+                      disabled={deleteLoading[course.id]}
+                      className="text-red-500 hover:bg-red-100"
+                    >
+                      <Trash className="h-4 w-4" />
+                      <span className="sr-only">Delete</span>
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {Object.keys(showDeleteModal).map(courseId => 
+        showDeleteModal[courseId] && (
+          <div key={courseId} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold mb-4">Delete Course</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this course? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDeleteModal(prev => ({ ...prev, [courseId]: false }))}
+                  disabled={deleteLoading[courseId]}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => handleDeleteCourse(courseId)}
+                  disabled={deleteLoading[courseId]}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {deleteLoading[courseId] ? 'Deleting...' : 'Delete'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )
+      )}
+    </>
   );
 }

@@ -199,13 +199,13 @@ export default function FeedbackManagement() {
           ) : metricsError ? (
             <div className="mb-8 text-center text-red-500">{metricsError}</div>
           ) : metrics ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
               <FeedbackMetricCard title="Average Rating" value={metrics.averageRating} description="Overall average rating" icon={Star} />
               <FeedbackMetricCard title="Top suggestion" value={metrics.topSuggestion} description="Most mentioned word" icon={TrendingUp} />
               <FeedbackMetricCard title="Top rate course" value={metrics.topRatedCourse} description="Highest average rating" icon={Star} />
               <FeedbackMetricCard title="Needs attention" value={metrics.needsAttention} description="Lowest average rating" icon={Frown} valueColor="text-red-500" />
               <FeedbackMetricCard title="Would recommend" value={metrics.wouldRecommend} description="Of all learners" icon={ThumbsUp} valueColor="text-green-500" />
-            </div>
+          </div>
           ) : null}
 
           <h2 className="text-xl font-bold mb-4">Filters & Search</h2>
@@ -344,34 +344,34 @@ export default function FeedbackManagement() {
                             "-"
                           }</TableCell>
                           <TableCell>{renderStars(fb.rating)}</TableCell>
-                          <TableCell>
-                            <Badge
-                              className={`px-2 py-0.5 rounded-full text-xs font-normal ${
+                        <TableCell>
+                          <Badge
+                            className={`px-2 py-0.5 rounded-full text-xs font-normal ${
                                 (fb.usefulness || (fb.fullResponse?.usefulness && fb.fullResponse.usefulness.toLowerCase() === 'very-useful'))
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
                               {
                                 fb.usefulness ||
                                 (fb.fullResponse?.usefulness
                                   ? fb.fullResponse.usefulness.replace(/-/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())
                                   : "-")
                               }
-                            </Badge>
-                          </TableCell>
+                          </Badge>
+                        </TableCell>
                           <TableCell>{fb.submittedAt || fb.submitted || fb.createdAt || "-"}</TableCell>
-                          <TableCell>
-                            <Badge className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full text-xs font-normal">
+                        <TableCell>
+                          <Badge className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full text-xs font-normal">
                               {fb.status || "Pending"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
                             <Button variant="outline" className="text-blue-600 hover:text-blue-700" onClick={() => openFeedbackModal(fb)}>
-                              <Eye className="h-4 w-4 mr-1" /> View
-                            </Button>
-                          </TableCell>
-                        </TableRow>
+                            <Eye className="h-4 w-4 mr-1" /> View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                       ))
                     )}
                   </TableBody>
@@ -403,15 +403,15 @@ export default function FeedbackManagement() {
                       onClick={() => goToPage(pageNumber)}
                     >
                       {pageNumber}
-                    </Button>
+                </Button>
                   );
                 })}
                 {totalPages > 5 && currentPage < totalPages - 2 && (
                   <>
-                    <span className="text-sm text-muted-foreground">...</span>
+                <span className="text-sm text-muted-foreground">...</span>
                     <Button variant="outline" onClick={() => goToPage(totalPages)}>
                       {totalPages}
-                    </Button>
+                </Button>
                   </>
                 )}
               </div>
@@ -576,6 +576,6 @@ export default function FeedbackManagement() {
             </Card>
           </div>
         )}
-      </div>
-    )
+    </div>
+  )
 }

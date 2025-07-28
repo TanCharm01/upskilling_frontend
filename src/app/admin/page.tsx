@@ -38,7 +38,7 @@ export default function AdminAuthPage() {
       return;
     }
     try {
-      const res = await fetch('http://localhost:3001/admin/auth/login', {
+      const res = await fetch('http://localhost:3001/auth/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -77,7 +77,7 @@ export default function AdminAuthPage() {
       return;
     }
     try {
-      const res = await fetch('http://localhost:3001/admin/auth/register', {
+      const res = await fetch('http://localhost:3001/auth/admin/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

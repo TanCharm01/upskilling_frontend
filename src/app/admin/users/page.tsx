@@ -233,9 +233,22 @@ export default function UserManagement() {
   const paginatedUsers = sortedUsers.slice((currentPage - 1) * usersPerPage, currentPage * usersPerPage);
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     setLoading(true);
     setError('');
-    fetch('http://localhost:3001/admins/user-management')
+    const token = localStorage.getItem('admin_token');
+    
+    if (!token) {
+      setError('No admin token found');
+      setLoading(false);
+      return;
+    }
+    
+    fetch('http://localhost:3001/admins/user-management', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch users');
         return res.json();
@@ -243,22 +256,26 @@ export default function UserManagement() {
       .then(data => setUsers(data))
       .catch(() => setError('Failed to fetch users'))
       .finally(() => setLoading(false));
+      
     // Fetch current admin profile for role
     try {
-      const adminToken = localStorage.getItem('admin_token');
-      if (adminToken) {
-        const decoded = decodeJWT(adminToken);
-        if (decoded?.id) {
-          fetch(`http://localhost:3001/admins/profile/${decoded.id}`, {
-            headers: { 'Authorization': `Bearer ${adminToken}` }
+      const decoded = decodeJWT(token);
+      if (decoded?.id) {
+        fetch(`http://localhost:3001/admins/profile/${decoded.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data && data.role) setCurrentUserRole(data.role);
           })
-            .then(res => res.ok ? res.json() : null)
-            .then(data => {
-              if (data && data.role) setCurrentUserRole(data.role);
-            });
-        }
+          .catch(() => {
+            // Silently fail for profile fetch
+            console.warn('Failed to fetch admin profile');
+          });
       }
-    } catch {}
+    } catch (error) {
+      console.warn('Failed to decode admin token:', error);
+    }
   }, []);
 
   useEffect(() => {
