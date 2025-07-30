@@ -10,6 +10,7 @@ import { CourseMetricCard } from "@/components/ui/course-metric-card"
 import AdminSidebar from "@/components/AdminSidebar"
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { buildApiUrl } from "@/lib/utils"
 
 // Dummy data for course table
 const coursesData = [
@@ -107,7 +108,7 @@ function CourseMetricsSection() {
   useEffect(() => {
     setLoading(true);
     setError('');
-    fetch('http://localhost:3001/courses/metrics')
+    fetch(buildApiUrl('courses/metrics'))
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch course metrics');
         return res.json();
@@ -139,7 +140,7 @@ function useCourseManagementData() {
   useEffect(() => {
     setLoading(true);
     setError('');
-    fetch('http://localhost:3001/courses/management')
+    fetch(buildApiUrl('courses/management'))
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch courses');
         return res.json();
@@ -169,7 +170,7 @@ function CourseManagementTable({ searchTerm }: { searchTerm: string }) {
     setDeleteLoading(prev => ({ ...prev, [courseId]: true }));
     try {
       const token = localStorage.getItem('admin_token');
-      const response = await fetch(`http://localhost:3001/courses/${courseId}`, {
+              const response = await fetch(buildApiUrl(`courses/${courseId}`), {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

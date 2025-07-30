@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Search, ChevronDown, Plus, MoreHorizontal, ArrowLeft, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Label } from '@/components/ui/label';
-import { decodeJWT } from '@/lib/utils';
+import { decodeJWT, buildApiUrl } from '@/lib/utils';
 import { useRef } from 'react';
 
 const ADMIN_ROLES = [
@@ -43,7 +43,7 @@ function AdminRegisterModal({ open, onClose, onSuccess }: { open: boolean, onClo
       return;
     }
     try {
-      const res = await fetch('http://localhost:3001/admin/auth/register', {
+      const res = await fetch(buildApiUrl('admin/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -123,9 +123,9 @@ function UserProfileModal({ open, onClose, userId, userRole }: { open: boolean, 
     setError('');
     let endpoint = '';
     if (userRole && (normalize(userRole) === 'admin' || normalize(userRole) === 'superadmin')) {
-      endpoint = `http://localhost:3001/admins/profile/${userId}`;
+      endpoint = buildApiUrl(`admins/profile/${userId}`);
     } else {
-      endpoint = `http://localhost:3001/users/${userId}`;
+      endpoint = buildApiUrl(`users/${userId}`);
     }
     fetch(endpoint)
       .then(res => {
@@ -246,7 +246,7 @@ export default function UserManagement() {
       return;
     }
     
-    fetch('http://localhost:3001/admins/user-management', {
+    fetch(buildApiUrl('admins/user-management'), {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(res => {
@@ -261,7 +261,7 @@ export default function UserManagement() {
     try {
       const decoded = decodeJWT(token);
       if (decoded?.id) {
-        fetch(`http://localhost:3001/admins/profile/${decoded.id}`, {
+        fetch(buildApiUrl(`admins/profile/${decoded.id}`), {
           headers: { 'Authorization': `Bearer ${token}` }
         })
           .then(res => res.ok ? res.json() : null)
@@ -431,7 +431,7 @@ export default function UserManagement() {
                                     setPromoteMessage('');
                                     try {
                                       const adminToken = localStorage.getItem('admin_token');
-                                      const res = await fetch(`http://localhost:3001/admins/change-role/${user.id}`, {
+                                      const res = await fetch(buildApiUrl(`admins/change-role/${user.id}`), {
                                         method: 'PATCH',
                                         headers: {
                                           'Content-Type': 'application/json',
@@ -470,9 +470,9 @@ export default function UserManagement() {
                                       const adminToken = localStorage.getItem('admin_token');
                                       let endpoint = '';
                                       if (normalize(user.role) === 'admin' || normalize(user.role) === 'superadmin') {
-                                        endpoint = `http://localhost:3001/admins/reactivate-admin/${user.id}`;
+                                        endpoint = buildApiUrl(`admins/reactivate-admin/${user.id}`);
                                       } else {
-                                        endpoint = `http://localhost:3001/admins/reactivate-user/${user.id}`;
+                                        endpoint = buildApiUrl(`admins/reactivate-user/${user.id}`);
                                       }
                                       const res = await fetch(endpoint, {
                                         method: 'PATCH',
@@ -507,9 +507,9 @@ export default function UserManagement() {
                                       const adminToken = localStorage.getItem('admin_token');
                                       let endpoint = '';
                                       if (normalize(user.role) === 'admin' || normalize(user.role) === 'superadmin') {
-                                        endpoint = `http://localhost:3001/admins/deactivate-admin/${user.id}`;
+                                        endpoint = buildApiUrl(`admins/deactivate-admin/${user.id}`);
                                       } else {
-                                        endpoint = `http://localhost:3001/admins/deactivate-user/${user.id}`;
+                                        endpoint = buildApiUrl(`admins/deactivate-user/${user.id}`);
                                       }
                                       const res = await fetch(endpoint, {
                                         method: 'PATCH',
@@ -615,9 +615,9 @@ export default function UserManagement() {
                     const adminToken = localStorage.getItem('admin_token');
                     let endpoint = '';
                     if (normalize(deleteTarget.role) === 'admin' || normalize(deleteTarget.role) === 'superadmin') {
-                      endpoint = `http://localhost:3001/admins/${deleteTarget.id}`;
+                      endpoint = buildApiUrl(`admins/${deleteTarget.id}`);
                     } else {
-                      endpoint = `http://localhost:3001/users/${deleteTarget.id}`;
+                      endpoint = buildApiUrl(`users/${deleteTarget.id}`);
                     }
                     const res = await fetch(endpoint, {
                       method: 'DELETE',

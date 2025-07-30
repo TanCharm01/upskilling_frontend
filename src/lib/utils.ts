@@ -5,6 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// API base URL - can be changed globally
+const API_BASE_URL = "http://64.227.102.139:3001";
+// const API_BASE_URL = "http://localhost:3001";
+
+// Utility function to construct full API URL
+export function buildApiUrl(endpoint: string): string {
+  return `${API_BASE_URL}/${endpoint}`;
+}
+
 // Decodes a JWT and returns the payload as an object
 export function decodeJWT(token: string | null): {
   id?: string;

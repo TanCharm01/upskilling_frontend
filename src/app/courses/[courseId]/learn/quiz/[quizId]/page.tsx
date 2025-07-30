@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import CourseNavbar from "@/components/CourseNavbar";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
-import { decodeJWT } from "@/lib/utils";
+import { decodeJWT, buildApiUrl } from "@/lib/utils";
 
 export default function QuizPage() {
   const params = useParams();
@@ -39,7 +39,7 @@ export default function QuizPage() {
         // Fetch course content and find the quiz by quizId
         const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
         if (!token) throw new Error("No token found. Please login.");
-        const res = await fetch(`http://localhost:3001/courses/${courseId}/content`);
+        const res = await fetch(buildApiUrl(`courses/${courseId}/content`));
         if (!res.ok) throw new Error("Failed to fetch course content");
         const data = await res.json();
         let foundQuiz = null;
@@ -65,7 +65,7 @@ export default function QuizPage() {
   useEffect(() => {
     if (quiz && quiz.completed && userId && quizId) {
       setReviewLoading(true);
-      fetch(`http://localhost:3001/quizzes/submissions/${userId}/${quizId}`)
+      fetch(buildApiUrl(`quizzes/submissions/${userId}/${quizId}`))
         .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch review"))
         .then(data => setReview(data))
         .catch(() => setReview(null))
@@ -85,7 +85,7 @@ export default function QuizPage() {
     setGrading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:3001/quizzes/grade", {
+      const res = await fetch(buildApiUrl("quizzes/grade"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

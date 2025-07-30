@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ImageIcon, Plus, Minus, ArrowRight, ArrowLeft } from "lucide-react" // Import Plus and Minus icons
 import Link from "next/link"
 import { useRouter } from 'next/navigation';
+import { buildApiUrl } from "@/lib/utils"
 import NotificationModal from '@/components/ui/NotificationModal';
 
 export default function AddNewCourse() {
@@ -52,20 +53,63 @@ export default function AddNewCourse() {
     return () => window.removeEventListener('beforeunload', handler);
   }, [hasUnsavedChanges]);
 
-  // Save handler
-  function handleSave() {
-    const courseData = {
-      title: titleRef.current?.value || '',
-      description: descriptionRef.current?.value || '',
-      category,
-      learningObjectives,
-      level,
-      badges,
-      previewUrl,
-    };
-    localStorage.setItem('newCourseData', JSON.stringify(courseData));
-    setHasUnsavedChanges(false);
-    showModal('Course saved!');
+  // Upload file to backend and return the URL
+  const uploadFile = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw new Error('No admin token found')
+    }
+
+    const response = await fetch(buildApiUrl('upload/course-thumbnail'), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to upload file')
+    }
+
+    const data = await response.json()
+    return data.url // Return the uploaded file URL from backend
+  }
+
+  // Save handler with file upload
+  async function handleSave() {
+    try {
+      let uploadedThumbnailUrl = null
+      
+      // Upload thumbnail if selected
+      if (thumbnail) {
+        setModalMessage('Uploading thumbnail...')
+        setModalOpen(true)
+        uploadedThumbnailUrl = await uploadFile(thumbnail)
+      }
+
+      const courseData = {
+        title: titleRef.current?.value || '',
+        description: descriptionRef.current?.value || '',
+        category,
+        learningObjectives,
+        level,
+        badges,
+        previewUrl: uploadedThumbnailUrl || previewUrl, // Use uploaded URL or existing preview URL
+      };
+      
+      localStorage.setItem('newCourseData', JSON.stringify(courseData));
+      setHasUnsavedChanges(false);
+      setModalMessage('Course saved!');
+      setModalOpen(true);
+    } catch (error: any) {
+      setModalMessage(`Error: ${error.message}`);
+      setModalOpen(true);
+    }
   }
 
   // Confirm navigation if unsaved changes
@@ -81,7 +125,7 @@ export default function AddNewCourse() {
   useEffect(() => {
     setCategoriesLoading(true);
     setCategoriesError('');
-    fetch('http://localhost:3001/courses/categories')
+    fetch(buildApiUrl('courses/categories'))
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch categories');
         return res.json();
@@ -100,7 +144,7 @@ export default function AddNewCourse() {
   useEffect(() => {
     setBadgesLoading(true);
     setBadgesError('');
-    fetch('http://localhost:3001/badges')
+    fetch(buildApiUrl('badges'))
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch badges');
         return res.json();
@@ -138,6 +182,7 @@ export default function AddNewCourse() {
     if (file) {
       setThumbnail(file)
       setPreviewUrl(URL.createObjectURL(file))
+      markDirty()
     }
   }
 
@@ -148,6 +193,7 @@ export default function AddNewCourse() {
     if (file) {
       setThumbnail(file)
       setPreviewUrl(URL.createObjectURL(file))
+      markDirty()
     }
   }
 

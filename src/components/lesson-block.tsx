@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Select } from "@/components/ui/select"
 import { File, Trash, ImageIcon, Video, FileText, Plus, Minus, X } from "lucide-react" // Import X icon for delete
+import { buildApiUrl } from "@/lib/utils"
 
 interface LessonBlockProps {
   lessonNumber: number;
@@ -18,29 +19,132 @@ interface LessonBlockProps {
 }
 
 export function LessonBlock({ lessonNumber, lesson, onChange, onDelete }: LessonBlockProps) {
+  const [uploading, setUploading] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
+
+  // Upload file to backend and return the URL
+  const uploadFile = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    const token = localStorage.getItem('admin_token')
+    if (!token) {
+      throw new Error('No admin token found')
+    }
+
+    const response = await fetch(buildApiUrl('upload/lesson-media'), {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.message || 'Failed to upload file')
+    }
+
+    const data = await response.json()
+    return data.url // Return the uploaded file URL from backend
+  }
+
+  // Handle URL input submission
+  const handleUrlSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!urlInput.trim()) return;
+
+    const url = urlInput.trim();
+    
+    // Determine file type from URL
+    let fileType = 'other';
+    if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) fileType = 'image';
+    else if (url.match(/\.(mp4|avi|mov|wmv|flv|webm)$/i)) fileType = 'video';
+    else if (url.match(/\.pdf$/i)) fileType = 'pdf';
+    else if (url.match(/\.(doc|docx)$/i)) fileType = 'doc';
+
+    // Update lesson with URL
+    onChange({
+      ...lesson,
+      fileName: `External Media (${fileType})`,
+      fileSize: 'External',
+      fileType,
+      type: fileType === 'other' ? (lesson.type || 'video') : fileType,
+      filePreviewUrl: url,
+      mediaUrl: url,
+      file: null,
+    });
+
+    setUrlInput('');
+    setShowUrlInput(false);
+  };
+
   // Controlled fields from parent
   const handleFieldChange = (field: string, value: any) => {
     onChange({ ...lesson, [field]: value });
   };
 
-  // Media fields
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Media fields with file upload
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      const url = URL.createObjectURL(file);
+      
+      // Create temporary blob URL for immediate preview
+      const tempUrl = URL.createObjectURL(file);
       let fileType = 'other';
       if (file.type.startsWith('image/')) fileType = 'image';
       else if (file.type.startsWith('video/')) fileType = 'video';
       else if (file.type === 'application/pdf') fileType = 'pdf';
       else if (file.type === 'application/msword' || file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') fileType = 'doc';
+      
+      // Update lesson with temporary preview
       onChange({
         ...lesson,
         fileName: file.name,
         fileSize: (file.size / 1024 / 1024).toFixed(1) + 'MB',
         fileType,
         type: fileType === 'other' ? (lesson.type || 'video') : fileType,
-        filePreviewUrl: url,
+        filePreviewUrl: tempUrl,
+        file: file, // Store the actual file for upload
       });
+
+      // Upload file to backend
+      try {
+        setUploading(true);
+        const uploadedUrl = await uploadFile(file);
+        
+        // Update lesson with the actual uploaded URL
+        onChange({
+          ...lesson,
+          fileName: file.name,
+          fileSize: (file.size / 1024 / 1024).toFixed(1) + 'MB',
+          fileType,
+          type: fileType === 'other' ? (lesson.type || 'video') : fileType,
+          filePreviewUrl: uploadedUrl, // Use the uploaded URL instead of blob URL
+          mediaUrl: uploadedUrl, // Store the actual media URL
+          file: null, // Clear the file object
+        });
+        
+        // Clean up the temporary blob URL
+        URL.revokeObjectURL(tempUrl);
+      } catch (error: any) {
+        console.error('Upload failed:', error);
+        // Revert to no file if upload fails
+        onChange({
+          ...lesson,
+          fileName: null,
+          fileSize: null,
+          fileType: null,
+          filePreviewUrl: null,
+          mediaUrl: null,
+          file: null,
+        });
+        URL.revokeObjectURL(tempUrl);
+        alert(`Upload failed: ${error.message}`);
+      } finally {
+        setUploading(false);
+      }
     }
   };
 
@@ -225,37 +329,88 @@ export function LessonBlock({ lessonNumber, lesson, onChange, onDelete }: Lesson
               </p>
               {lesson.fileName ? (
                 <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg h-[350px] text-center relative overflow-hidden w-full">
-                  {renderMediaPreview()}
-                  <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-white/80 backdrop-blur-sm p-2 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      {lesson.fileType === "image" && <ImageIcon className="h-4 w-4 text-gray-600" />}
-                      {lesson.fileType === "video" && <Video className="h-4 w-4 text-gray-600" />}
-                      {lesson.fileType === "pdf" && <FileText className="h-4 w-4 text-gray-600" />}
-                      {lesson.fileType === "other" && <File className="h-4 w-4 text-gray-600" />}
-                      <div>
-                        <p className="font-medium text-sm">{lesson.fileName}</p>
-                        <p className="text-xs text-muted-foreground">{lesson.fileSize}</p>
-                      </div>
+                  {uploading ? (
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Uploading...</p>
                     </div>
-                    <Button variant="outline" onClick={handleDeleteMedia} className="text-red-500 hover:bg-red-100">
-                      <Trash className="h-4 w-4" />
-                      <span className="sr-only">Delete Media</span>
-                    </Button>
-                  </div>
+                  ) : (
+                    <>
+                      {renderMediaPreview()}
+                      <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-white/80 backdrop-blur-sm p-2 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                          {lesson.fileType === "image" && <ImageIcon className="h-4 w-4 text-gray-600" />}
+                          {lesson.fileType === "video" && <Video className="h-4 w-4 text-gray-600" />}
+                          {lesson.fileType === "pdf" && <FileText className="h-4 w-4 text-gray-600" />}
+                          {lesson.fileType === "other" && <File className="h-4 w-4 text-gray-600" />}
+                          <div>
+                            <p className="font-medium text-sm">{lesson.fileName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {lesson.fileSize === 'External' ? 'External URL' : lesson.fileSize}
+                            </p>
+                          </div>
+                        </div>
+                        <Button variant="outline" onClick={handleDeleteMedia} className="text-red-500 hover:bg-red-100">
+                          <Trash className="h-4 w-4" />
+                          <span className="sr-only">Delete Media</span>
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg h-[350px] text-center w-full">
-                  <div className="mb-4 p-4 bg-gray-100 rounded-lg">
-                    <ImageIcon className="h-12 w-12 text-gray-400" />
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Drop your media here, or{" "}
-                    <label htmlFor={`file-upload-${lessonNumber}`} className="text-blue-600 hover:underline cursor-pointer">
-                      click to browse
-                    </label>
-                    . Supported formats: .png, .jpg, .mp4, .pdf, up to 5MB.
-                  </p>
-                  <Input id={`file-upload-${lessonNumber}`} type="file" className="hidden" onChange={handleFileChange} />
+                  {showUrlInput ? (
+                    <div className="w-full max-w-md">
+                      <form onSubmit={handleUrlSubmit} className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Media URL</label>
+                          <Input
+                            type="url"
+                            placeholder="https://example.com/media.mp4"
+                            value={urlInput}
+                            onChange={(e) => setUrlInput(e.target.value)}
+                            className="w-full"
+                            required
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button type="submit" className="flex-1">
+                            Add URL
+                          </Button>
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            onClick={() => setShowUrlInput(false)}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </form>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-4 p-4 bg-gray-100 rounded-lg">
+                        <ImageIcon className="h-12 w-12 text-gray-400" />
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Drop your media here, or{" "}
+                        <label htmlFor={`file-upload-${lessonNumber}`} className="text-blue-600 hover:underline cursor-pointer">
+                          click to browse
+                        </label>
+                        , or{" "}
+                        <button 
+                          type="button"
+                          onClick={() => setShowUrlInput(true)}
+                          className="text-blue-600 hover:underline cursor-pointer"
+                        >
+                          paste a URL
+                        </button>
+                        . Supported formats: .png, .jpg, .mp4, .pdf, up to 5MB.
+                      </p>
+                      <Input id={`file-upload-${lessonNumber}`} type="file" className="hidden" onChange={handleFileChange} />
+                    </>
+                  )}
                 </div>
               )}
             </div>

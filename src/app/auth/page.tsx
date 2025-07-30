@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Chrome, Apple, Facebook, ChevronLeft } from "lucide-react"
+import { buildApiUrl } from "@/lib/utils"
 
 export default function Component() {
   const [email, setEmail] = useState("")
@@ -32,7 +33,7 @@ export default function Component() {
       return
     }
     try {
-      const res = await fetch("http://localhost:3001/auth/login", {
+      const res = await fetch(buildApiUrl("auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword })

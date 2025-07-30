@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import React, { useEffect, useState, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Lock, Play, PlayCircle, CheckCircle, Trophy, Medal } from 'lucide-react';
-import { decodeJWT } from '@/lib/utils';
+import { decodeJWT, buildApiUrl } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
 
@@ -50,7 +50,7 @@ export default function CourseContentPage() {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`http://localhost:3001/courses/${courseId}/content`);
+        const res = await fetch(buildApiUrl(`courses/${courseId}/content`));
         if (!res.ok) throw new Error('Failed to fetch course content');
         const data = await res.json();
         setCourse(data);
@@ -78,7 +78,7 @@ export default function CourseContentPage() {
         return;
       }
       try {
-        const res = await fetch('http://localhost:3001/dashboard', {
+        const res = await fetch(buildApiUrl('dashboard'), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error('Failed to fetch user data');
@@ -118,7 +118,7 @@ export default function CourseContentPage() {
     setEnrolling(true);
     try {
       if (!user?.id) throw new Error('User not found. Please log in.');
-      const res = await fetch('http://localhost:3001/enrollments', {
+      const res = await fetch(buildApiUrl('enrollments'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, courseId: course.id }),

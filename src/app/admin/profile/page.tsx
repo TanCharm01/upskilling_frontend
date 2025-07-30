@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { decodeJWT } from "@/lib/utils";
+import { decodeJWT, buildApiUrl } from "@/lib/utils";
 
 type AdminData = {
   id: string;
@@ -43,7 +43,7 @@ export default function AdminProfilePage() {
           return;
         }
 
-        const response = await fetch(`http://localhost:3001/admins/profile/${adminInfo.id}`, {
+        const response = await fetch(buildApiUrl(`admins/profile/${adminInfo.id}`), {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -90,7 +90,7 @@ export default function AdminProfilePage() {
         return;
       }
 
-      const response = await fetch(`http://localhost:3001/admins/profile/${adminInfo.id}`, {
+      const response = await fetch(buildApiUrl(`admins/profile/${adminInfo.id}`), {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`,

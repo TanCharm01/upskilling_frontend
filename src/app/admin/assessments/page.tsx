@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { BookOpen, Clock, Target, Unlock, AlertCircle, CheckCircle } from "lucide-react"
 import AdminSidebar from "@/components/AdminSidebar"
 import { useEffect } from "react"
+import { buildApiUrl } from "@/lib/utils"
 
 type AssessmentType = "final" | "quiz"
 
@@ -90,7 +91,7 @@ export default function AdminUploadPage() {
       setCoursesLoading(true);
       setCoursesError(null);
       try {
-        const res = await fetch("http://localhost:3001/courses");
+        const res = await fetch(buildApiUrl("courses"));
         if (!res.ok) throw new Error("Failed to fetch courses");
         const data = await res.json();
         setCourses(data);
@@ -113,7 +114,7 @@ export default function AdminUploadPage() {
       setModulesLoading(true);
       setModulesError(null);
       try {
-        const res = await fetch(`http://localhost:3001/courses/${formData.courseId}/modules`);
+        const res = await fetch(buildApiUrl(`courses/${formData.courseId}/modules`));
         if (!res.ok) throw new Error("Failed to fetch modules");
         const data = await res.json();
         setModules(data);
@@ -204,8 +205,8 @@ export default function AdminUploadPage() {
             }
 
       const endpoint = activeTab === "final"
-        ? "http://localhost:3001/final-assessments"
-        : "http://localhost:3001/quizzes";
+        ? buildApiUrl("final-assessments")
+        : buildApiUrl("quizzes");
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

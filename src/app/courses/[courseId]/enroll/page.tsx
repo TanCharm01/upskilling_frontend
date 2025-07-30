@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Clock, BookOpen, Award, BadgeIcon as Certificate, Trophy, CheckCircle, Play, Lock, ChevronDown, ChevronRight, PlayCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { buildApiUrl } from "@/lib/utils"
 
 
 console.log("Collapsible is:", Collapsible)
@@ -45,7 +46,7 @@ export default function CourseEnrollPage({ params }: { params: Promise<{ courseI
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`http://localhost:3001/courses/${courseId}/content`);
+        const res = await fetch(buildApiUrl(`courses/${courseId}/content`));
         if (!res.ok) throw new Error('Failed to fetch course content');
         const data = await res.json();
         setCourse(data);

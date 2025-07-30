@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { buildApiUrl } from "@/lib/utils"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -23,7 +24,7 @@ export default function ProfilePage() {
       setLoading(false);
       return;
     }
-    fetch("http://localhost:3001/dashboard", {
+    fetch(buildApiUrl("dashboard"), {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (res) => {
@@ -66,7 +67,7 @@ export default function ProfilePage() {
       formData.append("name", form.name);
       formData.append("tagline", form.tagline);
       if (avatarFile) formData.append("avatar", avatarFile);
-      const res = await fetch(`http://localhost:3001/users/${user.id}`, {
+      const res = await fetch(buildApiUrl(`users/${user.id}`), {
         method: "PATCH",
         body: formData,
       });

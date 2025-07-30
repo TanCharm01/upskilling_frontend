@@ -8,6 +8,7 @@ import { Edit, Save, X, Plus, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { CourseStatisticItem } from "@/components/course-statistic-item"
 import React, { useEffect, useState } from "react";
+import { buildApiUrl } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -38,7 +39,7 @@ export default function CourseViewPage({ params }: { params: Promise<{ courseId:
       setCourseLoading(true);
       setCourseError(null);
       try {
-        const res = await fetch(`http://localhost:3001/courses/${courseId}/content/admin`);
+        const res = await fetch(buildApiUrl(`courses/${courseId}/content/admin`));
         if (!res.ok) throw new Error("Failed to fetch course data");
         const data = await res.json();
         setCourse(data);
@@ -56,7 +57,7 @@ export default function CourseViewPage({ params }: { params: Promise<{ courseId:
       setStatsLoading(true);
       setStatsError(null);
       try {
-        const res = await fetch(`http://localhost:3001/courses/${courseId}/statistics`);
+        const res = await fetch(buildApiUrl(`courses/${courseId}/statistics`));
         if (!res.ok) throw new Error("Failed to fetch statistics");
         const data = await res.json();
         setStatistics(data.statistics);

@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { decodeJWT } from "@/lib/utils";
+import { decodeJWT, buildApiUrl } from "@/lib/utils";
 import CourseNavbar from "@/components/CourseNavbar";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -48,7 +48,7 @@ export default function FinalAssessmentPage() {
     // Fetch the assessmentId (finalAssessment.id) if available
     async function fetchAssessmentId() {
       try {
-        const res = await fetch(`http://localhost:3001/courses/${courseId}/content?userId=${userId}`);
+        const res = await fetch(buildApiUrl(`courses/${courseId}/content?userId=${userId}`));
         if (!res.ok) throw new Error("Failed to fetch course content");
         const data = await res.json();
         if (data.finalAssessment && data.finalAssessment.id) {
@@ -69,7 +69,7 @@ export default function FinalAssessmentPage() {
       setError("");
       try {
         if (!courseId || !userId) return;
-        const res = await fetch(`http://localhost:3001/final-assessments/course/${courseId}/user/${userId}/random`);
+        const res = await fetch(buildApiUrl(`final-assessments/course/${courseId}/user/${userId}/random`));
         if (!res.ok) throw new Error("Failed to fetch final assessment");
         const data = await res.json();
         setAssessment(data);
@@ -89,7 +89,7 @@ export default function FinalAssessmentPage() {
     setError("");
     try {
       if (!courseId || !userId) return;
-      const res = await fetch(`http://localhost:3001/final-assessments/course/${courseId}/user/${userId}/random`);
+      const res = await fetch(buildApiUrl(`final-assessments/course/${courseId}/user/${userId}/random`));
       if (!res.ok) throw new Error("Failed to fetch final assessment");
       const data = await res.json();
       setAssessment(data);
@@ -112,7 +112,7 @@ export default function FinalAssessmentPage() {
     e.preventDefault();
     if (!assessment || !assessmentId) return;
     try {
-      const res = await fetch("http://localhost:3001/final-assessments/submit", {
+      const res = await fetch(buildApiUrl("final-assessments/submit"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

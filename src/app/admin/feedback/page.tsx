@@ -22,6 +22,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { FeedbackMetricCard } from "@/components/ui/feedback-metric-card"
 import { useEffect, useState } from "react"
+import { buildApiUrl } from "@/lib/utils"
 
 // Helper to render star ratings
 const renderStars = (rating: number) => {
@@ -69,7 +70,7 @@ export default function FeedbackManagement() {
 
   // Fetch courses for filter dropdown
   useEffect(() => {
-    fetch("http://localhost:3001/courses")
+    fetch(buildApiUrl("courses"))
       .then((res) => res.json())
       .then((data) => setCourses(Array.isArray(data) ? data : data.courses || []))
       .catch(() => setCourses([]));
@@ -158,7 +159,7 @@ export default function FeedbackManagement() {
     // Fetch metrics
     setMetricsLoading(true);
     setMetricsError(null);
-    fetch("http://localhost:3001/feedback/admin/statistics")
+    fetch(buildApiUrl("feedback/admin/statistics"))
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch feedback metrics");
         return res.json();
@@ -170,7 +171,7 @@ export default function FeedbackManagement() {
     // Fetch feedback table data
     setFeedbackLoading(true);
     setFeedbackError(null);
-    fetch("http://localhost:3001/feedback/admin/all")
+    fetch(buildApiUrl("feedback/admin/all"))
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch feedback");
         return res.json();

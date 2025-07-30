@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import AdminSidebar from '@/components/AdminSidebar'
 import { useEffect, useState } from 'react';
-import { decodeJWT } from '@/lib/utils';
+import { decodeJWT, buildApiUrl } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCallback } from 'react';
@@ -117,7 +117,7 @@ function UserInfoModal({ open, onClose, userId, userInfo }: { open: boolean, onC
     if (!userId) return;
     setLoading(true);
     setError('');
-    fetch(`http://localhost:3001/users/${userId}`)
+          fetch(buildApiUrl(`users/${userId}`))
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch user info');
         return res.json();
@@ -184,7 +184,7 @@ function AdminRegisterModal({ open, onClose, onSuccess }: { open: boolean, onClo
       return;
     }
     try {
-      const res = await fetch('http://localhost:3001/auth/admin/register', {
+      const res = await fetch(buildApiUrl('auth/admin/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -275,21 +275,21 @@ export default function Dashboard() {
       return;
     }
     Promise.all([
-      fetch(`http://localhost:3001/admins/profile/${adminInfo.id}`, {
+      fetch(buildApiUrl(`admins/profile/${adminInfo.id}`), {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => {
           if (!res.ok) throw new Error('Failed to fetch admin profile.');
           return res.json();
         }),
-      fetch('http://localhost:3001/admins/dashboard-stats', {
+      fetch(buildApiUrl('admins/dashboard-stats'), {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => {
           if (!res.ok) throw new Error('Failed to fetch dashboard stats.');
           return res.json();
         }),
-      fetch('http://localhost:3001/activity-logs/recent', {
+      fetch(buildApiUrl('activity-logs/recent'), {
         headers: { 'Authorization': `Bearer ${token}` }
       })
         .then(res => {

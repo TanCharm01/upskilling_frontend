@@ -3,6 +3,7 @@
 import AdminSidebar from "@/components/AdminSidebar"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { buildApiUrl } from "@/lib/utils"
 import { Edit } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from 'react';
@@ -122,7 +123,7 @@ export default function CoursePreview() {
       const localData = JSON.parse(localStorage.getItem('newCourseData') || '{}');
       localData.modules = JSON.parse(localStorage.getItem('newModulesData') || '[]');
       const payload = transformCourseDataForApi(localData, userId);
-      const res = await fetch('http://localhost:3001/courses/create-with-modules-lessons', {
+      const res = await fetch(buildApiUrl('courses/create-with-modules-lessons'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

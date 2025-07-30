@@ -6,6 +6,7 @@ import Link from "next/link";
 import { decodeJWT } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/utils"
 
 export default function CourseCatalogPage() {
   const [user, setUser] = useState<{ id?: string; name?: string; avatar?: string; tagline?: string } | null>(null);
@@ -31,7 +32,7 @@ export default function CourseCatalogPage() {
         return;
       }
       try {
-        const res = await fetch("http://localhost:3001/dashboard", {
+        const res = await fetch(buildApiUrl(`dashboard`), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Failed to fetch user data");
@@ -61,7 +62,7 @@ export default function CourseCatalogPage() {
           const userInfo = decodeJWT(token);
           userId = userInfo?.id;
         }
-        const res = await fetch(`http://localhost:3001/courses/catalog/available?userId=${userId}`);
+        const res = await fetch(buildApiUrl(`courses/catalog/available?userId=${userId}`));
         if (!res.ok) throw new Error("Failed to fetch courses");
         const data = await res.json();
         setCourses(data);
@@ -89,9 +90,9 @@ export default function CourseCatalogPage() {
           userId = userInfo?.id;
         }
         if (selectedCategory === 'Most Popular') {
-          url = `http://localhost:3001/courses/search/most-popular?userId=${userId}`;
+          url = buildApiUrl(`courses/search/most-popular?userId=${userId}`);
         } else {
-          url = `http://localhost:3001/courses/search/by-category?category=${encodeURIComponent(selectedCategory)}&userId=${userId}`;
+          url = buildApiUrl(`courses/search/by-category?category=${encodeURIComponent(selectedCategory)}&userId=${userId}`);
         }
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch courses");
@@ -127,7 +128,7 @@ export default function CourseCatalogPage() {
             const userInfo = decodeJWT(token);
             userId = userInfo?.id;
           }
-          const res = await fetch(`http://localhost:3001/courses/catalog/available?userId=${userId}`);
+          const res = await fetch(buildApiUrl(`courses/catalog/available?userId=${userId}`));
           if (!res.ok) throw new Error("Failed to fetch courses");
           const data = await res.json();
           setCourses(data);
@@ -158,7 +159,7 @@ export default function CourseCatalogPage() {
         const userInfo = decodeJWT(token);
         userId = userInfo?.id;
       }
-      const res = await fetch(`http://localhost:3001/courses/search?q=${encodeURIComponent(searchQuery)}&userId=${userId}`);
+      const res = await fetch(buildApiUrl(`courses/search?q=${encodeURIComponent(searchQuery)}&userId=${userId}`));
       if (!res.ok) throw new Error("Failed to fetch courses");
       const data = await res.json();
       setCourses(data);
@@ -182,7 +183,7 @@ export default function CourseCatalogPage() {
         const userInfo = decodeJWT(token);
         userId = userInfo?.id;
       }
-      const res = await fetch(`http://localhost:3001/courses/search/by-badge?badgeName=${encodeURIComponent(badgeName)}&userId=${userId}`);
+      const res = await fetch(buildApiUrl(`courses/search/by-badge?badgeName=${encodeURIComponent(badgeName)}&userId=${userId}`));
       if (!res.ok) throw new Error("Failed to fetch courses");
       const data = await res.json();
       setCourses(data);
@@ -198,7 +199,7 @@ export default function CourseCatalogPage() {
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const res = await fetch("http://localhost:3001/courses/categories");
+        const res = await fetch(buildApiUrl("courses/categories"));
         if (!res.ok) throw new Error("Failed to fetch categories");
         let data = await res.json();
         // Remove duplicates and reserved categories

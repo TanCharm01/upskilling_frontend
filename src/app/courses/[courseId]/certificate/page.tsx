@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { decodeJWT } from '@/lib/utils';
+import { decodeJWT, buildApiUrl } from '@/lib/utils';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import dynamic from 'next/dynamic';
@@ -32,7 +32,7 @@ export default function CourseCertificatePage() {
       return;
     }
     // Fetch user info from backend
-    fetch(`http://localhost:3001/users/${userInfo.id}`)
+    fetch(buildApiUrl(`users/${userInfo.id}`))
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch user info.');
         return res.json();
@@ -44,7 +44,7 @@ export default function CourseCertificatePage() {
         setUser(null);
       });
     // Fetch course name on mount
-    fetch(`http://localhost:3001/courses/${params.courseId}/content`)
+    fetch(buildApiUrl(`courses/${params.courseId}/content`))
       .then(res => {
         if (!res.ok) throw new Error('Failed to fetch course info.');
         return res.json();
@@ -63,7 +63,7 @@ export default function CourseCertificatePage() {
     if (userInfo?.id && courseName) {
       setUserId(userInfo.id);
       setCheckingFeedback(true);
-      fetch(`http://localhost:3001/feedback/user/${userInfo.id}/course/${params.courseId}`)
+      fetch(buildApiUrl(`feedback/user/${userInfo.id}/course/${params.courseId}`))
         .then(res => res.json())
         .then(data => {
           setFeedbackSubmitted(!!data);
@@ -79,7 +79,7 @@ export default function CourseCertificatePage() {
     setGenerating(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:3001/certificates/generate', {
+      const res = await fetch(buildApiUrl('certificates/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, courseId: params.courseId })

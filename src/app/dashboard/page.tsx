@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Search, BookOpen, Award, LayoutDashboard, GraduationCap, User, LogOut, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from 'next/navigation';
+import { buildApiUrl } from "@/lib/utils"
 
 interface DashboardUser {
   name: string;
@@ -65,7 +66,7 @@ export default function StudentDashboard() {
       setLoading(false)
       return
     }
-    fetch("http://localhost:3001/dashboard", {
+    fetch(buildApiUrl("dashboard"), {
       headers: {
         Authorization: `Bearer ${token}`,
       },

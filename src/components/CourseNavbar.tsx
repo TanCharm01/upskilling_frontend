@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useEffect, useState } from "react"
+import { buildApiUrl } from "@/lib/utils"
 
 const CourseNavbar = () => {
   const [user, setUser] = useState<{ name?: string; avatar?: string } | null>(null);
@@ -11,7 +12,7 @@ const CourseNavbar = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
       try {
-        const res = await fetch("http://localhost:3001/dashboard", {
+        const res = await fetch(buildApiUrl("dashboard"), {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) return;

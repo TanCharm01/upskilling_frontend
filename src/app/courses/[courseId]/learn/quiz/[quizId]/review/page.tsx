@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { decodeJWT } from "@/lib/utils";
+import { decodeJWT, buildApiUrl } from "@/lib/utils";
 import CourseNavbar from "@/components/CourseNavbar";
 import { useRouter } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
@@ -28,7 +28,7 @@ export default function QuizReviewPage() {
     if (userId && quizId) {
       setLoading(true);
       setError("");
-      fetch(`http://localhost:3001/quizzes/submissions/${userId}/${quizId}`)
+      fetch(buildApiUrl(`quizzes/submissions/${userId}/${quizId}`))
         .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch review"))
         .then(data => setReview(data))
         .catch(() => setError("Failed to fetch review"))

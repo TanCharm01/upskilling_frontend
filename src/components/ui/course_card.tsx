@@ -2,7 +2,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { useCallback, useState } from "react"
-import { decodeJWT } from "@/lib/utils"
+import { decodeJWT, buildApiUrl } from "@/lib/utils"
 
 interface CourseCardProps {
   id: string;
@@ -35,7 +35,7 @@ export default function CourseCard({ id, title, totalLessons, duration, descript
       setEnrollMessage(null);
       setEnrolling(true);
       try {
-        const res = await fetch('http://localhost:3001/enrollments', {
+        const res = await fetch(buildApiUrl('enrollments'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

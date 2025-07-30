@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Star } from 'lucide-react'
 import { Checkbox } from "@/components/ui/checkbox"
+import { buildApiUrl } from "@/lib/utils"
 
 interface FeedbackFormModalProps {
   open: boolean;
@@ -35,7 +36,7 @@ export default function FeedbackFormModal({ open, onClose, courseId, userId, onF
     setSubmitting(true)
     setError(null)
     try {
-      const res = await fetch('http://localhost:3001/feedback', {
+      const res = await fetch(buildApiUrl('feedback'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

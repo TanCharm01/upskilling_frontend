@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Chrome, Apple, Facebook, X, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { buildApiUrl } from "@/lib/utils";
 
 // OTP Input Component
 function OTPInput({ value, onChange, disabled = false }: { value: string, onChange: (value: string) => void, disabled?: boolean }) {
@@ -119,7 +120,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
       return;
     }
     try {
-      const res = await fetch("http://localhost:3001/auth/login", {
+      const res = await fetch(buildApiUrl("auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword })
@@ -130,7 +131,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
         setSuccess("Login successful!");
         // Fetch user data and call onAuthSuccess callback
         try {
-          const userRes = await fetch("http://localhost:3001/dashboard", {
+          const userRes = await fetch(buildApiUrl("dashboard"), {
             headers: {
               Authorization: `Bearer ${data.access_token}`,
             },
@@ -182,7 +183,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
       return;
     }
     try {
-      const res = await fetch("http://localhost:3001/auth/register", {
+      const res = await fetch(buildApiUrl("auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -220,7 +221,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
     setError("");
     try {
       console.log("Sending OTP verification request:", { email: otpEmail, otp });
-      const res = await fetch("http://localhost:3001/auth/verify-email", {
+      const res = await fetch(buildApiUrl("auth/verify-email"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: otpEmail, otp })
@@ -233,7 +234,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
         
         // Fetch user data and call onAuthSuccess callback
         try {
-          const userRes = await fetch("http://localhost:3001/dashboard", {
+          const userRes = await fetch(buildApiUrl("dashboard"), {
             headers: {
               Authorization: `Bearer ${data.access_token}`,
             },
@@ -286,7 +287,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:3001/auth/resend-otp", {
+      const res = await fetch(buildApiUrl("auth/resend-otp"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -319,7 +320,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
       return;
     }
     try {
-      const res = await fetch("http://localhost:3001/auth/forgot-password", {
+      const res = await fetch(buildApiUrl("auth/forgot-password"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: trimmedEmail })
@@ -350,7 +351,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:3001/auth/verify-reset-otp", {
+      const res = await fetch(buildApiUrl("auth/verify-reset-otp"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: otpEmail, otp })
@@ -382,7 +383,7 @@ export default function AuthModal({ onClose, initialMode = 'login', onAuthSucces
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:3001/auth/reset-password", {
+      const res = await fetch(buildApiUrl("auth/reset-password"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

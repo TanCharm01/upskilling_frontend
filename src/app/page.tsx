@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import BrowseCourses from "@/components/ui/browse_courses" // Import the new component
 import StudentSuccessStories from "@/components/ui/success_stories"
 import { useRouter } from "next/navigation"
+import { buildApiUrl } from "@/lib/utils"
 
 export default function LandingPage() {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | null>(null);
@@ -25,7 +26,7 @@ export default function LandingPage() {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await fetch("http://localhost:3001/dashboard", {
+          const response = await fetch(buildApiUrl("dashboard"), {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -51,7 +52,7 @@ export default function LandingPage() {
   useEffect(() => {
     setLoading(true);
     setError("");
-    fetch("http://localhost:3001/home")
+    fetch(buildApiUrl("home"))
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to fetch home data");
         const data = await res.json();

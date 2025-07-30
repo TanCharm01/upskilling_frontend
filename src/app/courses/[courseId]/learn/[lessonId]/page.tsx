@@ -28,7 +28,7 @@ import {
   MessageCircle,
 } from "lucide-react"
 import Link from "next/link"
-import { decodeJWT } from "@/lib/utils"
+import { decodeJWT, buildApiUrl } from "@/lib/utils"
 import { useParams } from "next/navigation";
 
 const getLessonIcon = (type: string, completed: boolean, current: boolean, locked = false) => {
@@ -93,7 +93,7 @@ export default function CourseLearningPage({
       setUserId(currentUserId)
       // Fetch course content with user ID and current lesson ID
       const res = await fetch(
-        `http://localhost:3001/courses/${courseId}/content?userId=${currentUserId}&currentLessonId=${lessonId}`
+        buildApiUrl(`courses/${courseId}/content?userId=${currentUserId}&currentLessonId=${lessonId}`)
       )
       if (!res.ok) throw new Error("Failed to fetch course content")
       const data = await res.json()
@@ -112,7 +112,7 @@ export default function CourseLearningPage({
   // Track lesson access on page load
   useEffect(() => {
     if (!userId || !courseId || !lessonId) return;
-    fetch('http://localhost:3001/progress/track', {
+    fetch(buildApiUrl('progress/track'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -132,7 +132,7 @@ export default function CourseLearningPage({
 
   async function markLessonComplete() {
     setMarkingComplete(true);
-    await fetch('http://localhost:3001/progress', {
+    await fetch(buildApiUrl('progress'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

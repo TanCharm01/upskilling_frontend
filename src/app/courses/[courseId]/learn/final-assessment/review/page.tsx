@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { decodeJWT } from "@/lib/utils";
+import { decodeJWT, buildApiUrl } from "@/lib/utils";
 import CourseNavbar from "@/components/CourseNavbar";
 import { ChevronLeft } from "lucide-react";
 
@@ -29,7 +29,7 @@ export default function FinalAssessmentReviewPage() {
     // Fetch the assessmentId (finalAssessment.id) if available
     async function fetchAssessmentId() {
       try {
-        const res = await fetch(`http://localhost:3001/courses/${courseId}/content?userId=${userId}`);
+        const res = await fetch(buildApiUrl(`courses/${courseId}/content?userId=${userId}`));
         if (!res.ok) throw new Error("Failed to fetch course content");
         const data = await res.json();
         if (data.finalAssessment && data.finalAssessment.id) {
@@ -50,7 +50,7 @@ export default function FinalAssessmentReviewPage() {
       setError("");
       try {
         if (!assessmentId || !userId) return;
-        const res = await fetch(`http://localhost:3001/final-assessments/submission/${userId}/${assessmentId}`);
+        const res = await fetch(buildApiUrl(`final-assessments/submission/${userId}/${assessmentId}`));
         if (!res.ok) throw new Error("Failed to fetch assessment review");
         const data = await res.json();
         setReview(data);
